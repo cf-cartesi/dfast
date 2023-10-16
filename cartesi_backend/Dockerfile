@@ -42,7 +42,9 @@ pip install -r requirements.txt --no-cache
 find /usr/local/lib -type d -name __pycache__ -exec rm -r {} +
 EOF
 
-COPY ./dapp.py .
+COPY ./dapp.py ./start_osrm.sh ./test/osrm_route_test.py .
+RUN mkdir -p /opt/cartesi/etc/osrm/sudeste
+RUN cp /opt/osrm-backend/build/sudeste-latest.osrm* /opt/cartesi/etc/osrm/sudeste/
 
 ENV ROLLUP_HTTP_SERVER_URL="http://127.0.0.1:5004"
 
