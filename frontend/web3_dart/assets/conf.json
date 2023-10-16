@@ -1,0 +1,12 @@
+{
+  "localhost": {
+    "token": "DummyETH",
+    "rpcUrl": "http://10.0.2.2:8545",
+    "graphqlAPIURL" : "http://10.0.2.2:4000/graphql",
+    "inspectAPIURL":"http://10.0.2.2:5005/inspect",
+    "contracts": {
+      "dapp": "0x70ac08179605AF2D9e75782b8DEcDD3c22aA4D0C",
+      "InputBox": "0x59b22D57D4f067708AB0c00552767405926dc768"
+    }
+  }
+}
