@@ -23,7 +23,7 @@ class RollupContracts {
   void changeNetwork(String network) {
     this.network = network;
     rpcUrl = conf[network]["rpcUrl"];
-    dapp = conf[network]["contracts"]["dapp"];
+    dapp = EthereumAddress.fromHex(conf[network]["contracts"]["dapp"]);
   }
 
   void addInput(EthPrivateKey credentials, String payload) async {
