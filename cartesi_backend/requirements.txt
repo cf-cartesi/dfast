@@ -1,1 +1,16 @@
-requests == 2.31.0
+requests==2.31.0
+PyGeodesy==23.10.10
+cartesi @ git+https://github.com/prototyp3-dev/python-cartesi@a72f3ac617252d06b4fb238534f45a119a1fd2f4
+certifi==2023.7.22
+charset-normalizer==3.3.0
+exceptiongroup==1.1.3
+idna==3.4
+iniconfig==2.0.0
+packaging==23.2
+pluggy==1.3.0
+pydantic==1.10.13
+pytest==7.4.2
+requests==2.31.0
+tomli==2.0.1
+typing_extensions==4.8.0
+urllib3==2.0.6
