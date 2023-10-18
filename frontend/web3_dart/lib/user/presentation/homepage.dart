@@ -1,14 +1,15 @@
+import 'package:dart_geohash/dart_geohash.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:web3_dart/map/presentation/map.dart';
 import 'package:web3_dart/rollups/application/contracts.dart';
 import 'package:web3_dart/user/application/user.dart';
 
-import 'package:web3_dart/web3Account/application/account.dart';
+import '../presentation/drawer.dart';
 
 class UserHomePage extends StatefulWidget {
-  final Account account;
-
-  const UserHomePage({super.key, required this.account});
+  static const String route = '/user';
+  const UserHomePage({super.key});
 
   @override
   State<UserHomePage> createState() => _UserHomePageState();
@@ -20,34 +21,36 @@ class _UserHomePageState extends State<UserHomePage>{
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     rollupContracts = RollupContracts("localhost");
-    user = User(widget.account);
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    //throw UnimplementedError();
+    user = ModalRoute.of(context)!.settings.arguments as User;
 
     return Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 40,
-          title: const Text("User Homepage"),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            final position = await user.determinePosition();
-            print(position);
-            rollupContracts.addInput(
-                user.account.credentials.privateKey,
-                "DFaST: ${position.toString()}"
-            );
-          },
-          tooltip: 'Add Input',
-          child: const Icon(Icons.add),
-        )
-    );
+          appBar: AppBar(),
+          endDrawer: buildUserDrawer(
+              user,
+              context,
+              UserHomePage.route
+          ),
+          body: const AnimatedMapControllerPage(),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              final position = await user.determinePosition();
+              final geoHash = GeoHash.fromDecimalDegrees(
+                  position.longitude, position.latitude, precision: 6);
+              print('$position | ${geoHash.geohash}');
+              rollupContracts.addInput(
+                  user.account.credentials.privateKey,
+                  "DFaST: ${position.toString()}, Geohash: ${geoHash.geohash}"
+              );
+            },
+            tooltip: 'Choose a destination',
+            child: const Icon(Icons.add_location, color: Colors.blue),
+          )
+      );
   }
 }

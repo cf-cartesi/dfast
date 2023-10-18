@@ -1,3 +1,5 @@
+import 'package:web3dart/credentials.dart';
+
 import '../../web3Account/application/account.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -5,6 +7,10 @@ class User {
   Account account;
 
   User(this.account);
+
+  EthereumAddress getAddress() {
+    return account.credentials.privateKey.address;
+  }
 
   Future<Position> determinePosition() async {
       await _checkPermissions();

@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
+import 'package:web3_dart/user/application/user.dart';
 import 'package:web3_dart/user/presentation/homepage.dart';
+import 'package:web3_dart/user/presentation/trips.dart';
 import 'package:web3_dart/web3Account/application/account.dart';
 import 'package:web3_dart/web3Account/presentation/create.dart';
 import 'package:web3_dart/web3Account/presentation/manage.dart';
@@ -44,6 +46,10 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'DFaST Home Page'),
+      routes: {
+        UserHomePage.route: (context) => const UserHomePage(),
+        TripsPage.route: (context) => const TripsPage(),
+      },
     );
   }
 }
@@ -126,11 +132,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _nav2UserPage(Account userAccount) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-          builder: (context) => UserHomePage(account:userAccount)
-      ),
-    );
+    User user = User(userAccount);
+    Navigator.pushReplacementNamed(
+        context, UserHomePage.route, arguments: user);
   }
 }

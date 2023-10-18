@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:web3_dart/user/presentation/homepage.dart';
 
 import '../../main.dart';
+import '../../user/application/user.dart';
 import '../application/account.dart';
 import 'create.dart';
 
@@ -127,7 +129,12 @@ class _ManageWalletState extends State<ManageWallet> {
                                             child: const Text("Login"),
                                             onPressed: () {
                                               if (_formKey.currentState!.validate()) {
-                                                widget.callback(userAccount);
+                                                //widget.callback(userAccount);
+                                                Navigator.pushReplacementNamed(
+                                                    context,
+                                                    UserHomePage.route,
+                                                    arguments: User(userAccount)
+                                                );
                                               }
                                             })
                                       ],

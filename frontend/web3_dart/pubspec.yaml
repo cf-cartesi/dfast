@@ -44,6 +44,8 @@ dependencies:
   web_socket_channel: ^2.4.0
   http: ^1.1.0
   build_runner: ^2.4.6
+  flutter_map: ^6.0.0
+  dart_geohash: ^2.0.2
 
 dev_dependencies:
   flutter_test:
