@@ -16,14 +16,14 @@ class UserHomePage extends StatefulWidget {
 }
 
 class _UserHomePageState extends State<UserHomePage>{
-  late RollupContracts rollupContracts;
   late User user;
+  late final Drawer drawer;
 
   @override
   void initState() {
     super.initState();
-    rollupContracts = RollupContracts("localhost");
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +31,7 @@ class _UserHomePageState extends State<UserHomePage>{
 
     return Scaffold(
           appBar: AppBar(),
-          endDrawer: buildUserDrawer(
-              user,
-              context,
-              UserHomePage.route
-          ),
+          endDrawer: UserDrawer(user: user, currentRoute: UserHomePage.route),
           body: const AnimatedMapControllerPage(),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
@@ -43,7 +39,7 @@ class _UserHomePageState extends State<UserHomePage>{
               final geoHash = GeoHash.fromDecimalDegrees(
                   position.longitude, position.latitude, precision: 6);
               print('$position | ${geoHash.geohash}');
-              rollupContracts.addInput(
+              addInput(
                   user.account.credentials.privateKey,
                   "DFaST: ${position.toString()}, Geohash: ${geoHash.geohash}"
               );

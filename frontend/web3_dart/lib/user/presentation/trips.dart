@@ -22,11 +22,7 @@ class _TripsPageState extends State<TripsPage>{
 
     return Scaffold(
       appBar: AppBar(),
-      endDrawer: buildUserDrawer(
-        user,
-        context,
-        TripsPage.route
-      ),
+      endDrawer: UserDrawer(user: user, currentRoute: TripsPage.route),
       body: const Text("List user's trips"),
     );
   }

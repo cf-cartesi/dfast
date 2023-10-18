@@ -1,5 +1,8 @@
-import 'package:web3dart/credentials.dart';
+import 'package:http/http.dart';
+import 'package:web3dart/web3dart.dart';
 
+
+import '../../shared/app_conf.dart';
 import '../../web3Account/application/account.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -10,6 +13,11 @@ class User {
 
   EthereumAddress getAddress() {
     return account.credentials.privateKey.address;
+  }
+
+  Future<EtherAmount> getBalance() async {
+    final client = Web3Client(AppConf.info.rpcUrl, Client());
+    return await client.getBalance(getAddress());
   }
 
   Future<Position> determinePosition() async {

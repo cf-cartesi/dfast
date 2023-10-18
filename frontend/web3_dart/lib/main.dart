@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
+import 'package:web3_dart/shared/app_conf.dart';
 import 'package:web3_dart/user/application/user.dart';
 import 'package:web3_dart/user/presentation/homepage.dart';
 import 'package:web3_dart/user/presentation/trips.dart';
@@ -92,6 +93,9 @@ class _MyHomePageState extends State<MyHomePage> {
     io.Directory dir = await _createDirectory(accountsDirectoryPath);
 
     _getAccountList(dir);
+
+    // load default network AppConf
+    AppConf.load("localhost");
 
     FlutterNativeSplash.remove();
   }
