@@ -1,6 +1,6 @@
 flutter_native_splash:
-  #color: "#99c1f1"
-  #image: assets/image.png
+  color: "#fe9854"
+  image: assets/icon.png
   #branding: assets/splash_screens/icon.png
   #color_dark: "#121212"
   #image_dark: assets/logo-development.png
@@ -21,14 +21,14 @@ flutter_native_splash:
   # splash screen to a png image.  This is useful for gradients. The image will be stretch to the
   # size of the app. Only one parameter can be used, color and background_image cannot both be set.
   #color: "#FFFFFF"
-  background_image: "assets/image.png"
+  #background_image: "assets/image.png"
 
   # Optional parameters are listed below.  To enable a parameter, uncomment the line by removing
   # the leading # character.
 
   # The image parameter allows you to specify an image used in the splash screen.  It must be a
   # png file and should be sized for 4x pixel density.
-  #image: assets/splash.png
+  #image: assets/icon.png
 
   # The branding property allows you to specify an image used as branding in the splash screen.
   # It must be a png file. It is supported for Android, iOS and the Web.  For Android 12,
@@ -60,7 +60,7 @@ flutter_native_splash:
   # 640 pixels in diameter.
   # App icon without an icon background: This should be 1152×1152 pixels, and fit within a circle
   # 768 pixels in diameter.
-  #image: assets/android12splash.png
+  #image: assets/icon.png
 
   # Splash screen background color.
   #color: "#FFCC00"
@@ -76,7 +76,7 @@ flutter_native_splash:
   # parameters from above.
   #image_dark: assets/android12splash-invert.png
   color_dark: "#042a49"
-  icon_background_color_dark: "#eeeeee"
+  #icon_background_color_dark: "#eeeeee"
 
   # The android, ios and web parameters can be used to disable generating a splash screen on a given
   # platform.
@@ -99,7 +99,7 @@ flutter_native_splash:
   #image_web: assets/splash-web.gif
   #image_dark_web: assets/splash-invert-web.gif
   #background_image_android: "assets/background-android.png"
-  background_image_android: "assets/image.png"
+  #background_image_android: "assets/image.png"
   #background_image_dark_android: "assets/dark-background-android.png"
   #background_image_ios: "assets/background-ios.png"
   #background_image_dark_ios: "assets/dark-background-ios.png"
