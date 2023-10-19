@@ -2,54 +2,60 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-class AnimatedMapControllerPage extends StatefulWidget {
-  static const String route = '/map_controller_animated';
+class AnimatedMapController {
+  late void Function(LatLng currLocation, LatLng destLocation) addMarkerToMap;
+}
 
-  const AnimatedMapControllerPage({Key? key}) : super(key: key);
+class AnimatedMap extends StatefulWidget {
+  final AnimatedMapController controller;
+  const AnimatedMap({Key? key, required this.controller}) : super(key: key);
 
   @override
-  AnimatedMapControllerPageState createState() {
-    return AnimatedMapControllerPageState();
+  AnimatedMapState createState() {
+    return AnimatedMapState();
   }
 }
 
-class AnimatedMapControllerPageState extends State<AnimatedMapControllerPage>
+class AnimatedMapState extends State<AnimatedMap>
     with TickerProviderStateMixin {
   static const _startedId = 'AnimatedMapController#MoveStarted';
   static const _inProgressId = 'AnimatedMapController#MoveInProgress';
   static const _finishedId = 'AnimatedMapController#MoveFinished';
 
-  static const _london = LatLng(51.5, -0.09);
-  static const _paris = LatLng(48.8566, 2.3522);
-  static const _dublin = LatLng(53.3498, -6.2603);
-
-  static const _markers = [
-    Marker(
-      width: 80,
-      height: 80,
-      point: _london,
-      child: Icon(Icons.location_on, color: Colors.blue),
-    ),
-    Marker(
-      width: 80,
-      height: 80,
-      point: _dublin,
-      child: Icon(Icons.location_on, color: Colors.green),
-    ),
-    Marker(
-      width: 80,
-      height: 80,
-      point: _paris,
-      child: Icon(Icons.location_on, color: Colors.purple),
-    ),
-  ];
-
+  late List<Marker> _markers = List.empty();
   late final MapController mapController;
 
   @override
   void initState() {
     super.initState();
     mapController = MapController();
+    widget.controller.addMarkerToMap = addMarkerToMap;
+  }
+
+  void addMarkerToMap(LatLng currLocation, LatLng destLocation) {
+    final bounds = LatLngBounds.fromPoints([destLocation, currLocation]);
+    final constrained = CameraFit.bounds(
+      bounds: bounds,
+    ).fit(mapController.camera);
+
+    setState(() {
+      _markers = [
+        Marker(
+          width: 80,
+          height: 80,
+          point: currLocation,
+          child: const Icon(Icons.my_location, color: Colors.red)
+        ),
+        Marker(
+            width: 80,
+            height: 80,
+            point: destLocation,
+            child: const Icon(Icons.location_pin, color: Colors.blue)
+        ),
+      ];
+    });
+
+    _animatedMapMove(constrained.center, constrained.zoom);
   }
 
   void _animatedMapMove(LatLng destLocation, double destZoom) {
@@ -106,69 +112,11 @@ class AnimatedMapControllerPageState extends State<AnimatedMapControllerPage>
     controller.forward();
   }
 
-  /*Padding(
-  paddingg: const EdgeInsets.only(top: 8, bottom: 8),
-  child: Row(
-  children: <Widget>[
-  MaterialButton(
-  onPressed: () => _animatedMapMove(_london, 10),
-  child: const Text('London'),
-  ),
-  MaterialButton(
-  onPressed: () => _animatedMapMove(_paris, 5),
-  child: const Text('Paris'),
-  ),
-  MaterialButton(
-  onPressed: () => _animatedMapMove(_dublin, 5),
-  child: const Text('Dublin'),
-  ),
-  ],
-  ),
-  ),*/
 
   @override
   Widget build(BuildContext context) {
     return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 8),
-              child: Row(
-                children: <Widget>[
-                  MaterialButton(
-                    onPressed: () {
-                      final bounds = LatLngBounds.fromPoints([
-                        _dublin,
-                        _paris,
-                        _london,
-                      ]);
-
-                      mapController.fitCamera(
-                        CameraFit.bounds(
-                          bounds: bounds,
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                        ),
-                      );
-                    },
-                    child: const Text('Fit Bounds'),
-                  ),
-                  MaterialButton(
-                    onPressed: () {
-                      final bounds = LatLngBounds.fromPoints([
-                        _dublin,
-                        _paris,
-                        _london,
-                      ]);
-
-                      final constrained = CameraFit.bounds(
-                        bounds: bounds,
-                      ).fit(mapController.camera);
-                      _animatedMapMove(constrained.center, constrained.zoom);
-                    },
-                    child: const Text('Fit Bounds animated'),
-                  ),
-                ],
-              ),
-            ),
             Flexible(
               child: FlutterMap(
                 mapController: mapController,
@@ -184,7 +132,7 @@ class AnimatedMapControllerPageState extends State<AnimatedMapControllerPage>
                     userAgentPackageName: 'dev.fleaflet.flutter_map.example',
                     tileUpdateTransformer: _animatedMoveTileUpdateTransformer,
                   ),
-                  const MarkerLayer(markers: _markers),
+                  MarkerLayer(markers: _markers),
                 ],
               ),
             ),
@@ -202,7 +150,7 @@ TileUpdateTransformer.fromHandlers(handleData: (updateEvent, sink) {
   final mapEvent = updateEvent.mapEvent;
 
   final id = mapEvent is MapEventMove ? mapEvent.id : null;
-  if (id?.startsWith(AnimatedMapControllerPageState._startedId) == true) {
+  if (id?.startsWith(AnimatedMapState._startedId) == true) {
     final parts = id!.split('#')[2].split(',');
     final lat = double.parse(parts[0]);
     final lon = double.parse(parts[1]);
@@ -217,11 +165,11 @@ TileUpdateTransformer.fromHandlers(handleData: (updateEvent, sink) {
         loadZoomOverride: zoom,
       ),
     );
-  } else if (id == AnimatedMapControllerPageState._inProgressId) {
+  } else if (id == AnimatedMapState._inProgressId) {
     // Do not prune or load whilst animating so that any existing tiles remain
     // visible. A smarter implementation may start pruning once we are close to
     // the target zoom/location.
-  } else if (id == AnimatedMapControllerPageState._finishedId) {
+  } else if (id == AnimatedMapState._finishedId) {
     // We already prefetched the tiles when animation started so just prune.
     sink.add(updateEvent.pruneOnly());
   } else {
