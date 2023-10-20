@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-class AnimatedMapController {
-  late void Function(LatLng currLocation, LatLng destLocation) addMarkerToMap;
-}
+import '../application/map_controller.dart';
+
 
 class AnimatedMap extends StatefulWidget {
   final AnimatedMapController controller;
@@ -23,16 +22,19 @@ class AnimatedMapState extends State<AnimatedMap>
   static const _finishedId = 'AnimatedMapController#MoveFinished';
 
   late List<Marker> _markers = List.empty();
+  late List<LatLng> _polyline = List.empty();
   late final MapController mapController;
 
   @override
   void initState() {
     super.initState();
     mapController = MapController();
-    widget.controller.addMarkerToMap = addMarkerToMap;
+    widget.controller.addTripToMap = addTripToMap;
+    widget.controller.clearMap = clearMap;
   }
 
-  void addMarkerToMap(LatLng currLocation, LatLng destLocation) {
+  void addTripToMap(LatLng currLocation,
+      LatLng destLocation, List<LatLng> route) {
     final bounds = LatLngBounds.fromPoints([destLocation, currLocation]);
     final constrained = CameraFit.bounds(
       bounds: bounds,
@@ -53,6 +55,8 @@ class AnimatedMapState extends State<AnimatedMap>
             child: const Icon(Icons.location_pin, color: Colors.blue)
         ),
       ];
+
+      _polyline = route;
     });
 
     _animatedMapMove(constrained.center, constrained.zoom);
@@ -112,6 +116,13 @@ class AnimatedMapState extends State<AnimatedMap>
     controller.forward();
   }
 
+  void clearMap() {
+    setState(() {
+      _markers = [];
+      _polyline = [];
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +144,15 @@ class AnimatedMapState extends State<AnimatedMap>
                     tileUpdateTransformer: _animatedMoveTileUpdateTransformer,
                   ),
                   MarkerLayer(markers: _markers),
+                  PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: _polyline,
+                          color: Colors.blue,
+                          strokeWidth: 1.5
+                        )
+                      ]
+                  )
                 ],
               ),
             ),

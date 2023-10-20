@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +7,8 @@ import 'package:web3_dart/shared/app_conf.dart';
 import 'package:web3_dart/user/application/user.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../map/application/map_controller.dart';
+import '../../map/application/trip.dart';
 import '../presentation/drawer.dart';
 
 class UserHomePage extends StatefulWidget {
@@ -132,7 +132,10 @@ class _UserHomePageState extends State<UserHomePage>{
     final position = await user.determinePosition();
     currLocation = LatLng(position.latitude, position.longitude);
     destLocation = LatLng(destinationLat, destinationLng);
-    mapController.addMarkerToMap(currLocation, destLocation);
+
+    final route = await getRoute(currLocation, destLocation);
+
+    mapController.addTripToMap(currLocation, destLocation, route);
     await Future.delayed(const Duration(seconds: 1)); // wait map animation
   }
 
@@ -161,6 +164,7 @@ class _UserHomePageState extends State<UserHomePage>{
                 children: [
                   FilledButton(
                     onPressed: () {
+                      mapController.clearMap();
                       Navigator.pop(context);
                     },
                     style: FilledButton.styleFrom(

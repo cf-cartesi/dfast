@@ -2,8 +2,8 @@
   "localhost": {
     "token": "DummyETH",
     "rpcUrl": "http://10.0.2.2:8545",
-    "graphqlAPIURL": "http://10.0.2.2:4000/graphql",
-    "inspectAPIURL":"http://10.0.2.2:5005/inspect",
+    "graphqlAPIURL": "http://10.0.2.2:8080/graphql",
+    "inspectAPIURL":"http://10.0.2.2:8080/inspect",
     "contracts": {
       "dapp": "0x70ac08179605AF2D9e75782b8DEcDD3c22aA4D0C",
       "InputBox": "0x59b22D57D4f067708AB0c00552767405926dc768"
@@ -12,8 +12,8 @@
   "Sepolia": {
     "token": "Sepolia ETH",
     "rpcUrl": "http://sepoliaRPC:8545",
-    "graphqlAPIURL": "http://sepoliaGraphqlAPIURL:4000/graphql",
-    "inspectAPIURL":"http://sepoliainspectAPIURL:5005/inspect",
+    "graphqlAPIURL": "http://sepoliaGraphqlAPIURL:8080/graphql",
+    "inspectAPIURL":"http://sepoliainspectAPIURL:8080/inspect",
     "contracts": {
       "dapp": "0x1111111111111111111111111111111111111111",
       "InputBox": "0x59b22D57D4f067708AB0c00552767405926dc768"
