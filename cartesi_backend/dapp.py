@@ -145,7 +145,7 @@ def withdraw(rollup: Rollup, data: RollupData) -> bool:
     payload = WithdrawInput.parse_obj(data.json_payload())
     
     user = data.metadata.msg_sender
-    amout = payload.amount
+    amount = payload.amount
 
     # remove from wallet
     try: bank.withdraw(user,amount)
