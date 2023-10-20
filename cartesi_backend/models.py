@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import NamedTuple
 from typing import Optional
 from enum import Enum
 from pytrie import StringTrie 
@@ -15,11 +16,29 @@ class Wallet(BaseModel):
 
 class Rider(BaseModel):
     address: str
+    n_trips: int = 0
+
+    def update_n_trips(self):
+        self.n_trips += 1
 
 class Driver(BaseModel):
     address: str
     n_trips: int = 0
-    reputation: int = 6
+    reputation: int = 6000 # max 10k
+    # total_inInsurance_payed: int = 0
+
+    def update_reputation(self, score: int) -> int:
+        if score < 0 or score > settings.max_reputation:
+            raise Exception("Invalid score")
+        nt = self.n_trips
+        if nt > settings.max_n_trips_reputation: nt = settings.max_n_trips_reputation
+        if nt < 1: nt = 1
+        new_reputation = (nt * self.reputation + score) // (nt+1)
+        if new_reputation > settings.max_reputation: new_reputation = settings.max_reputation
+        self.reputation = new_reputation
+        self.n_trips += 1
+        return new_reputation
+
 
 class Offer(BaseModel):
     # trip_id
@@ -34,8 +53,18 @@ class Offer(BaseModel):
 class TripStatusEnum(str, Enum):
     open = 'open'
     in_progress = 'in_progress'
-    waiting_confirmation = 'waiting_confirmation'
+    canceled = 'canceled'
+    timeout = 'timeout'
     ended = 'ended'
+    quarantine = 'quarantine'
+    dispute = 'dispute'
+
+class EndClaim(NamedTuple):
+    timestamp: int
+    final_distance: int
+    start_timestamp: int
+    end_timestamp: int
+    score: int
 
 class Trip(BaseModel):
     id: str
@@ -43,7 +72,12 @@ class Trip(BaseModel):
     start_timestamp: Optional[int]
     end_timestamp: Optional[int]
     confirmation_timestamp: Optional[int]
+    quarantine_timestamp: Optional[int]
+    quarantine_timeout: Optional[int]
+    dispute_timestamp: Optional[int]
+    finish_timestamp: Optional[int]
     rider: str
+    locked_assets: int
 
     geohash_origin: str
     geohash_destination: str
@@ -54,8 +88,7 @@ class Trip(BaseModel):
     offers: dict[str,Offer] = {}
     accepted_offer: Optional[Offer] = None
 
-    offers: list[str] = []
-
+    end_claims: dict[str,EndClaim] = {}
     status: TripStatusEnum = TripStatusEnum.open
 
 class WithdrawInput(BaseModel):
@@ -78,8 +111,35 @@ class TripOfferInput(BaseModel):
 
 class AcceptOfferInput(BaseModel):
     action: str = "accept_offer"
+    driver: str
+
+class TimeoutRequestInput(BaseModel):
+    action: str = "timeout_request"
     trip_id: str
-    driver_address: str
+
+class FinishTripInput(BaseModel):
+    action: str = "finish_trip"
+    trip_id: str
+    # rider signature over the local state: distance to destination
+    peer_signature: Optional[str]
+    trip_score_rider: Optional[int]
+    final_distance: int
+    start_timestamp: int
+    end_timestamp: int
+    # reputation_commitment: str
+    # reputation_proof: str
+
+class FinishTripDisputeInput(BaseModel):
+    action: str = "finish_trip_dispute"
+    trip_id: str
+    score: int
+    final_distance: int
+    start_timestamp: int
+    end_timestamp: int
+
+class TimeoutTripInput(BaseModel):
+    action: str = "timeout_trip"
+    trip_id: str
 
 class RidersManager:
     def __init__(self):
@@ -93,6 +153,7 @@ class RidersManager:
                 address = addr
             )
             rider = new_rider
+            self.riders[new_rider.address] = new_rider
         return rider
 
 class DriversManager:
@@ -107,8 +168,7 @@ class DriversManager:
 
     def create(self, address: str) -> Driver:
         addr = address.lower()
-        driver = self.drivers.get(addr)
-        if driver is not None:
+        if self.drivers.get(addr) is not None:
             raise Exception("Already a driver")
         deposit = self.security_deposits_registers.get(addr)
         if deposit is None or deposit < settings.security_deposit_value:
@@ -116,8 +176,8 @@ class DriversManager:
         new_driver = Driver(
             address = addr
         )
-        driver = new_driver
-        return driver
+        self.drivers[new_driver.address] = new_driver
+        return new_driver
 
     def register_deposit(self, address: str, amount: int) -> int:
         addr = address.lower()
@@ -133,6 +193,18 @@ class DriversManager:
         del self.security_deposits_registers[addr]
         return deposit
 
+    def update_reputation(self, address: str, score: int) -> int:
+        addr = address.lower()
+        driver = self.drivers.get(addr)
+        if driver is None:
+            raise Exception("Invalid driver")
+        if score < 0 or score > settings.max_reputation:
+            raise Exception("Invalid score")
+        new_rep = update_reputation(driver.reputation,driver.driver_n_trips,score)
+        driver_reputation = new_reputation
+        driver.n_trips += 1
+        
+
 class TripsManager:
     def __init__(self):
         self.trips: dict[str, Trip] = {}
@@ -140,12 +212,21 @@ class TripsManager:
         self.drivers_trip: dict[str, str] = {}
         self.drivers_offer: dict[str, str] = {}
         self.riders_trip: dict[str, str] = {}
+        self.trips_in_quarantine: dict[str, Trip] = {}
+        self.quarantined_users: dict[str, str] = {}
+        self.trips_in_dispute: dict[str, Trip] = {}
 
-    def create(self, timestamp: int, rider: Rider, input_params: TripRequestInput):
+    def create(self, timestamp: int, rider: Rider, locked_amount: int, input_params: TripRequestInput):
         # TODO: check parameters
         trip_id = self.riders_trip.get(rider.address)
         if trip_id is not None:
             raise Exception("Rider has other active trip")
+        if self.drivers_offer.get(rider.address) is not None:
+            raise Exception("Rider has an active offer")
+        if self.drivers_trip.get(rider.address) is not None:
+            raise Exception("Rider has another active trip as driver")
+        if self.quarantined_users.get(rider.address) is not None:
+            raise Exception("Rider is quarantined")
         # TODO: check if trip makes sense (compare geohashes distance to actual distance)
 
         timeout = input_params.timeout
@@ -157,6 +238,7 @@ class TripsManager:
             rider = rider.address.lower(),
             request_timestamp = timestamp,
             timeout = timestamp+timeout,
+            locked_assets = locked_amount,
 
             geohash_origin = input_params.geohash_origin,
             geohash_destination = input_params.geohash_destination,
@@ -169,32 +251,35 @@ class TripsManager:
         self.origin_geohash_trie[new_trip.geohash_origin] = new_trip.id
         self.riders_trip[rider.address] = new_trip.id
 
-    def match_trips(self, geohash: str):
+    def match_trips(self, geohash: str, ts: int):
         trips = self.origin_geohash_trie.values(geohash)
         trip_list = [] 
         for tid in trips:
             trip = self.trips[tid]
-            trip_list.append({"trip_id":tid,"timestamp":trip.request_timestamp,"timeout":trip.timeout,
-                "geohash_origin":trip.geohash_origin,"geohash_destination":trip.geohash_destination,
-                "distance":trip.distance,"estimated_value":trip.distance*settings.distance_price})
+            if ts or ts < trip.timeout:
+                trip_list.append({"trip_id":tid,"timestamp":trip.request_timestamp,"timeout":trip.timeout,
+                    "geohash_origin":trip.geohash_origin,"geohash_destination":trip.geohash_destination,
+                    "distance":trip.distance,"estimated_value":trip.distance*settings.distance_price})
         return trip_list
 
-    def get(self, trip_id: str) -> Trip:
-        return self.trips[trip_id]
-
     def remove(self, trip_id: str):
+        if self.trips.get(trip_id) is None:
+            raise Exception("invalid trip")
         del self.trips[trip_id]
 
     def add_offer(self, timestamp: int, driver: Driver, input_params: TripOfferInput):
         # TODO: check parameters
         # TODO: check trip status (still accepts offers at this point)
-        # TODO: check if trip timeout
         # TODO: check if driver has another offer/trip. 
         #        Check trips timeout or one sided ending
+        if self.riders_trip.get(driver.address) is not None:
+            raise Exception("Driver has other and active trip as rider")
         if self.drivers_offer.get(driver.address) is not None:
             raise Exception("Driver has another active offer")
         if self.drivers_trip.get(driver.address) is not None:
             raise Exception("Driver has another active trip")
+        if self.quarantined_users.get(driver.address) is not None:
+            raise Exception("Driver is quarantined")
         # TODO: check if driver can offer (compare geohash distance)
 
         trip_id = input_params.trip_id
@@ -206,53 +291,51 @@ class TripsManager:
         if trip.status != TripStatusEnum.open:
             raise Exception("invalid status")
         
+        # check if trip timeout
+        if timestamp > trip.timeout:
+            raise Exception("Timeout expired")
+
         distance = geohash.distance_(input_params.geohash,trip.geohash_origin) # use osrm to get route and calculate better approximation
         eta = timestamp # use osrm to get route and calculate an eta
 
         new_offer = Offer(
-            driver_address = driver.address.lower(),
+            driver_address = driver.address,
             driver_n_trips = driver.n_trips,
             driver_reputation = driver.reputation,
             timestamp = timestamp,
-            driver_geohash = input_params['geohash'],
+            driver_geohash = input_params.geohash,
             distance = distance,
             eta = eta
         )
-        trip.offers[driver] = new_offer
-        self.drivers_offer[driver] = trip_id
+        trip.offers[driver.address] = new_offer
+        self.drivers_offer[driver.address] = trip_id
     
     def accept_offer(self, timestamp: int, rider: Rider, input_params: AcceptOfferInput):
-        trip = self.trips.get(input_params.trip_id)
+        trip_id = self.riders_trip.get(rider.address)
+        if trip_id is None:
+            raise Exception("Rider has no active trip")
+        trip = self.trips.get(trip_id)
         if trip is None:
             raise Exception("invalid trip")
         if trip.rider != rider.address:
             raise Exception("invalid rider")
         if trip.status != TripStatusEnum.open:
             raise Exception("invalid status")
-        offer = trip.offers.get(input_params.driver_address)
+        driver = input_params.driver.lower()
+        offer = trip.offers.get(driver)
         if offer is None:
             raise Exception("invalid offer")
 
-        for o in trip.offers:
-            del self.drivers_offer[trip.offers[o].driver_address]
+        trip.accepted_offer = offer
+        trip.confirmation_timestamp = timestamp
+        trip.status = TripStatusEnum.in_progress
         self.drivers_trip[driver] = trip_id
 
-        trip.accepted_offer = offer
+        for o in trip.offers:
+            del self.drivers_offer[trip.offers[o].driver_address]
         trip.offers.clear()
-        trip.status = TripStatusEnum.in_progress
 
     def cancel_offer(self, addr: str):
-        trip_id = self.riders_trip.get(addr)
-        if trip_id is None:
-            raise Exception("Rider has no active trip")
-        trip = self.trips.get(trip_id)
-        if trip is None:
-            raise Exception("invalid trip")
-        
-        del trip.offers[addr]
-        del self.drivers_offer[addr]
-
-    def cancel_trip_request(self, addr: str):
         trip_id = self.drivers_offer.get(addr)
         if trip_id is None:
             raise Exception("Driver has no offers")
@@ -262,6 +345,114 @@ class TripsManager:
         
         del trip.offers[addr]
         del self.drivers_offer[addr]
+
+    def cancel_trip_request(self, addr: str):
+        trip_id = self.riders_trip.get(addr)
+        if trip_id is None:
+            raise Exception("Rider has no active trip")
+        trip = self.trips.get(trip_id)
+        if trip is None:
+            raise Exception("invalid trip")
+        
+        trip.status = TripStatusEnum.canceled
+        for o in trip.offers:
+            del self.drivers_offer[trip.offers[o].driver_address]
+        trip.offers.clear()
+        del self.riders_trip[trip.rider]
+        del self.trips[trip_id]
+
+    def timeout_request(self, timestamp: int, trip_id: str):
+        trip = self.trips.get(trip_id)
+        if trip is None:
+            raise Exception("invalid trip")
+        trip = self.trips[trip_id]
+        if trip.status != TripStatusEnum.open:
+            raise Exception("invalid status")
+        
+        # check if trip timeout
+        if timestamp <= trip.timeout:
+            raise Exception("Timeout not expired yet")
+
+        trip.status = TripStatusEnum.timeout
+        for o in trip.offers:
+            del self.drivers_offer[trip.offers[o].driver_address]
+        trip.offers.clear()
+        del self.riders_trip[trip.rider]
+        del self.trips[trip_id]
+        
+    def check_timeout_trip(self, timestamp: int, trip_id: str):
+        trip = self.trips_in_quarantine.get(trip_id)
+        if trip is None:
+            raise Exception("invalid trip")
+        trip = self.trips[trip_id]
+        if trip.status != TripStatusEnum.quarantine:
+            raise Exception("invalid status")
+        
+        # check if trip timeout
+        if timestamp <= trip.quarantine_timeout:
+            # Timeout not expired yet
+            return False
+        return True
+
+    def add_end_claim(self, trip_id: str, addr: str, timestamp: int, 
+            final_distance: int, start_timestamp: int, end_timestamp: int, score: int):
+
+        trip = self.trips_in_quarantine.get(trip_id)
+        if trip is None:
+            raise Exception("invalid trip")
+        if trip.status != TripStatusEnum.quarantine:
+            raise Exception("invalid status")
+
+        end_claim = EndClaim(timestamp, final_distance, start_timestamp, end_timestamp, score)
+        trip.end_claims[addr.lower()] = end_claim
+
+    def quarantine_trip(self, trip_id: str, timestamp: int):
+        trip = self.trips.get(trip_id)
+        if trip is None:
+            raise Exception("invalid trip")
+        
+        trip.status = TripStatusEnum.quarantine
+        trip.quarantine_timestamp = timestamp
+        trip.quarantine_timeout = timestamp + settings.quarantine_timeout
+        self.trips_in_quarantine[trip_id] = trip
+
+        del self.riders_trip[trip.rider]
+        del self.drivers_trip[trip.accepted_offer.driver_address]
+        del self.trips[trip_id]
+
+    def dispute_trip(self, trip_id: str, timestamp: int):
+        trip = self.trips_in_quarantine.get(trip_id)
+        if trip is None:
+            raise Exception("invalid trip")
+        if trip.status != TripStatusEnum.quarantine:
+            raise Exception("invalid status")
+        
+        trip.status = TripStatusEnum.dispute
+        trip.dispute_timestamp = timestamp
+        trip.quarantine_timeout = timestamp + settings.quarantine_timeout
+        self.trips_in_dispute[trip_id] = trip
+
+        del self.trips_in_quarantine[trip_id]
+        if self.quarantined_users.get(trip.rider): del self.quarantined_users[trip.rider]
+        if self.quarantined_users.get(trip.accepted_offer.driver_address): del self.quarantined_users[trip.accepted_offer.driver_address]
+
+    def end_trip(self, trip: Trip, timestamp: int, start_timestamp: int, end_timestamp: int):
+        # TODO: detect suspicious trips (use trip to transfer money)
+        #   trip doen't match predictions
+
+        trip.locked_assets = 0
+        trip.status = TripStatusEnum.ended
+        trip.finish_timestamp = timestamp
+        trip.start_timestamp = start_timestamp
+        trip.end_timestamp = end_timestamp
+
+        if self.riders_trip.get(trip.rider): del self.riders_trip[trip.rider]
+        if self.drivers_trip.get(trip.accepted_offer.driver_address): del self.drivers_trip[trip.accepted_offer.driver_address]
+        if self.quarantined_users.get(trip.rider): del self.quarantined_users[trip.rider]
+        if self.quarantined_users.get(trip.accepted_offer.driver_address): del self.quarantined_users[trip.accepted_offer.driver_address]
+        if self.trips.get(trip.id): del self.trips[trip.id]
+        if self.trips_in_quarantine.get(trip.id): del self.trips_in_quarantine[trip.id]
+        if self.trips_in_dispute.get(trip.id): del self.trips_in_dispute[trip.id]
 
     def cancel_trip(self, addr: str):
         # TODO: cancel trip after accept offer
@@ -285,22 +476,32 @@ class TripsManager:
         trip_id = self.riders_trip.get(addr)
         return self.trips.get(trip_id)
 
-    def end_trip(self, trip_id:str, addr: str, timestamp: int):
-        # TODO: detect suspicious trips (use trip to transfer money)
-        #   trip doen't match predictions
-        if self.trips[trip_id] is None:
-            raise Exception("invalid trip")
-        trip = self.trips[trip_id]
+    def get_quarantine(self, trip_id: str) -> Trip:
+        return self.trips_in_quarantine.get(trip_id)
 
-        if trip.accept_offer is None:
-            raise Exception("invalid offer")
+    def get_trip_by_quarantined(self, address: str) -> Trip:
+        addr = address.lower()
+        trip_id = self.quarantined_users.get(addr)
+        return self.trips_in_quarantine.get(trip_id)
 
-        # TODO: rest of trip end
-        #   delete all objects
+    def get_dispute(self, trip_id: str) -> Trip:
+        return self.trips_in_dispute.get(trip_id)
 
-    def has_enough_balance(self, input_params: TripOfferInput, balance: int) -> bool:
-        estimated_value = input_params.distance*settings.distance_price
-        return balance >= estimated_value*settings.trip_request_min_balance
+    def get_overshooted_trip_value(self,distance: int) -> int:
+        value = distance*settings.distance_price
+        return value*settings.overshooted_trip_value_mult
+
+    def get_final_trip_value(self,distance: int, duration: int, locked_amount: int) -> int:
+        dist_value = distance*settings.distance_price
+        time_value = duration*settings.time_price
+        final_value = max(dist_value,time_value)
+        final_value = min(final_value,locked_amount)
+        return final_value
+
+    def get_insurance_value(self,value: int, reputation: int) -> int:
+        return value * settings.min_insurance_pecentage // 100 + \
+            value * (settings.max_reputation - reputation) // settings.max_reputation * \
+            (settings.max_insurance_pecentage - settings.min_insurance_pecentage) // 100
 
     # TODO: End trip, wait confimation, dispute end
 

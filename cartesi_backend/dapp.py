@@ -4,6 +4,7 @@ import requests
 import re
 from eth_abi import encode
 import json
+import traceback
 
 from cartesi import DApp, Rollup, RollupData, JSONRouter, URLRouter, URLParameters
 from cartesi.models import _hex2str
@@ -107,7 +108,7 @@ def process_deposit(rollup: Rollup, data: RollupData) -> dict:
     try: bank.deposit(depositor,amount)
     except Exception as e:
         msg = f"Could not deposit {amount} for user {depositor}. Error: {e}"
-        logger.warning(msg)
+        logger.error(msg)
         rollup.report(str2hex(msg))
         return False
 
@@ -150,7 +151,7 @@ def withdraw(rollup: Rollup, data: RollupData) -> bool:
     try: bank.withdraw(user,amount)
     except Exception as e:
         msg = f"Could not Withdraw {amount} for user {user}. Error: {e}"
-        logger.warning(mag)
+        logger.error(mag)
         rollup.report(str2hex(msg))
         return False
 
@@ -175,8 +176,8 @@ def driver_application(rollup: Rollup, data: RollupData) -> bool:
         drivers_manager.register_deposit(data.metadata.msg_sender,settings.security_deposit_value)
         driver = drivers_manager.create(data.metadata.msg_sender)
     except Exception as e:
-        msg = f"Could create driver. Error: {e}"
-        logger.warning(msg)
+        msg = f"Could not create driver. Error: {e}"
+        logger.error(msg)
         rollup.report(str2hex(msg))
         return False
 
@@ -194,7 +195,7 @@ def return_security_deposit(rollup: Rollup, data: RollupData) -> bool:
 
     driver = drivers_manager.get(data.metadata.msg_sender)
     if driver is None:
-        msg = f"Couldn't get driver."
+        msg = f"Could not get driver."
         logger.warning(msg)
         rollup.report(str2hex(msg))
         return False
@@ -207,7 +208,7 @@ def return_security_deposit(rollup: Rollup, data: RollupData) -> bool:
 
     amount = drivers_manager.register_withdraw(driver.address)
     if amount == 0:
-        msg = f"Couldn't get security deposit back. Current {amount=}"
+        msg = f"Could not get security deposit back. Current {amount=}"
         logger.warning(msg)
         rollup.report(str2hex(msg))
         return False
@@ -234,24 +235,30 @@ def trip_request(rollup: Rollup, data: RollupData) -> bool:
 
     rider = riders_manager.get(data.metadata.msg_sender)
 
-    # check if rider has enough balance
-    if not trips_manager.has_enough_balance(payload,bank.balance(data.metadata.msg_sender)):
-        msg = f"Not enough balance to request trip trip. It should be {settings.trip_request_min_balance} times the estimated value"
-        logger.warning(msg)
-        rollup.report(str2hex(msg))
-        return False
+    estimated_value = trips_manager.get_overshooted_trip_value(payload.distance)
 
-    try: trips_manager.create(data.metadata.timestamp,rider,payload)
+    try:
+        old_trip = trips_manager.get_trip_by_rider(data.metadata.msg_sender)
+        if old_trip is not None:
+            # check if was timeout request, then timeout trip
+            if timestamp > old_trip.timeout:
+                bank.transfer(settings.locked_assets_address,old_trip.rider,old_trip.locked_assets)
+                trips_manager.timeout_request(data.metadata.timestamp,old_trip.id)
+
+        bank.transfer(rider.address,settings.locked_assets_address,estimated_value)
+        trips_manager.create(data.metadata.timestamp,rider,estimated_value,payload)
     except Exception as e:
-        msg = f"Couldn't create trip. Error: {e}"
-        logger.warning(msg)
+        msg = f"Could not create trip. Error: {e}"
+        logger.error(msg)
         rollup.report(str2hex(msg))
         return False
 
     # send notice with trip id and status
-    trip_id = trips_manager.riders_trip.get(data.metadata.msg_sender)
-    trip = trips_manager.trips.get(trip_id)
+    trip = trips_manager.get_trip_by_rider(data.metadata.msg_sender)
     rollup.notice(str2hex(f"{{\"action\":\"trip_request\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"trip_request\",\"address\":\"{data.metadata.msg_sender}\",\"balance\":\"{bank.balance(data.metadata.msg_sender)}\"}}"))
+    if old_trip is not None:
+        rollup.notice(str2hex(f"{{\"action\":\"trip_request\",\"address\":\"{data.metadata.msg_sender}\",\"trip\":\"{old_trip.id}\",\"status\":\"{old_trip.status}\"}}"))
 
     return True
 
@@ -265,7 +272,7 @@ def offer_trip(rollup: Rollup, data: RollupData) -> bool:
 
     driver = drivers_manager.get(data.metadata.msg_sender)
     if driver is None:
-        msg = f"Couldn't get driver."
+        msg = f"Could not get driver."
         logger.warning(msg)
         rollup.report(str2hex(msg))
         return False
@@ -275,8 +282,8 @@ def offer_trip(rollup: Rollup, data: RollupData) -> bool:
     # update trip offer list
     try: trips_manager.add_offer(data.metadata.timestamp,driver,payload)
     except Exception as e:
-        msg = f"Couldn't create offer. Error: {e}"
-        logger.warning(msg)
+        msg = f"Could not create offer. Error: {e}"
+        logger.error(msg)
         rollup.report(str2hex(msg))
         return False
 
@@ -290,12 +297,12 @@ def offer_trip(rollup: Rollup, data: RollupData) -> bool:
 # cancel offer
 @json_router.advance({'action': 'cancel_offer'})
 def cancel_offer(rollup: Rollup, data: RollupData) -> bool:
-    logger.info("Running accept trip")
+    logger.info("Running cancel offer")
 
     try: trips_manager.cancel_offer(data.metadata.msg_sender)
     except Exception as e:
-        msg = f"Couldn't cancel offer. Error: {e}"
-        logger.warning(msg)
+        msg = f"Could not cancel offer. Error: {e}"
+        logger.error(msg)
         rollup.report(str2hex(msg))
         return False
 
@@ -303,26 +310,65 @@ def cancel_offer(rollup: Rollup, data: RollupData) -> bool:
 
     return True
 
-# cancel trip_request
+# cancel cancel request
 @json_router.advance({'action': 'cancel_request'})
 def cancel_request(rollup: Rollup, data: RollupData) -> bool:
-    logger.info("Running accept trip")
+    logger.info("Running cancel request")
 
-    try: trips_manager.cancel_trip_request(data.metadata.msg_sender)
-    except Exception as e:
-        msg = f"Couldn't cancel offer. Error: {e}"
+    trip = trips_manager.get_trip_by_rider(data.metadata.msg_sender)
+    if trip is None:
+        msg = f"Could not get trip."
         logger.warning(msg)
         rollup.report(str2hex(msg))
         return False
 
-    rollup.notice(str2hex(f"{{\"action\":\"cancel_request\",\"address\":\"{data.metadata.msg_sender}\"}}"))
+    try:
+        bank.transfer(settings.locked_assets_address,data.metadata.msg_sender,trip.locked_assets)
+        trips_manager.cancel_trip_request(data.metadata.msg_sender)
+    except Exception as e:
+        msg = f"Could not cancel request. Error: {e}"
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"cancel_request\",\"address\":\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"cancel_request\",\"address\":\"{data.metadata.msg_sender}\",\"balance\":\"{bank.balance(data.metadata.msg_sender)}\"}}"))
+
+    return True
+
+# timeout_request
+@json_router.advance({'action': 'timeout_request'})
+def timeout_request(rollup: Rollup, data: RollupData) -> bool:
+    logger.info("Running timeout request")
+
+    payload = TimeoutRequestInput.parse_obj(data.json_payload())
+
+    trip_id = payload.trip_id
+    trip = trips_manager.get(trip_id)
+    if trip is None:
+        msg = f"Could not get trip."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    try:
+        bank.transfer(settings.locked_assets_address,trip.rider,trip.locked_assets)
+        trips_manager.timeout_request(data.metadata.timestamp,trip_id)
+    except Exception as e:
+        msg = f"Could not timeout trip request. Error: {e}"
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"timeout_request\",\"address\":\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"timeout_request\",\"address\":\"{data.metadata.msg_sender}\",\"balance\":\"{bank.balance(trip.rider)}\"}}"))
 
     return True
 
 # accept trip offer
-@json_router.advance({'action': 'accept_trip'})
-def accept_trip(rollup: Rollup, data: RollupData) -> bool:
-    logger.info("Running accept trip")
+@json_router.advance({'action': 'accept_offer'})
+def accept_offer(rollup: Rollup, data: RollupData) -> bool:
+    logger.info("Running accept offer")
     # trip id, address of the driver
 
     payload = AcceptOfferInput.parse_obj(data.json_payload())
@@ -331,31 +377,268 @@ def accept_trip(rollup: Rollup, data: RollupData) -> bool:
 
     try: trips_manager.accept_offer(data.metadata.timestamp,rider,payload)
     except Exception as e:
-        msg = f"Couldn't accept offer. Error: {e}"
-        logger.warning(msg)
+        msg = f"Could not accept offer. Error: {e}"
+        logger.error(msg)
         rollup.report(str2hex(msg))
         return False
 
     # send notice with trip id and status
     trip_id = trips_manager.riders_trip.get(data.metadata.msg_sender)
     trip = trips_manager.trips.get(trip_id)
-    rollup.notice(str2hex(f"{{\"action\":\"accept_trip\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"accept_offer\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
 
     return True
 
-
 # TODO: allow cancel trip (driver) and trip give up (rider)
-
 
 # finish trip
 @json_router.advance({'action': 'finish_trip'})
 def finish_trip(rollup: Rollup, data: RollupData) -> bool:
     logger.info("Running finish trip")
-    # trip id, extra data
-    # do everything that need to be done
-    #   rider -> send reputation, payment transactions
-    #   driver -> payment transactions
-    #   Disputes
+    
+    payload = FinishTripInput.parse_obj(data.json_payload())
+
+    trip_id = payload.trip_id
+    trip_quarantined = False
+    trip = trips_manager.get(trip_id)
+    if trip is None:
+        trip = trips_manager.get_quarantine(trip_id)
+        trip_quarantined = True
+    if trip is None:
+        msg = f"Could not get trip."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+    
+    peer = None
+    if data.metadata.msg_sender.lower() == trip.accepted_offer.driver_address:
+        peer = trip.rider
+    else:
+        if data.metadata.msg_sender.lower() != trip.rider:
+            msg = f"User not in trip."
+            logger.warning(msg)
+            rollup.report(str2hex(msg))
+            return False
+        peer = trip.accepted_offer.driver_address
+
+    driver = drivers_manager.get(trip.accepted_offer.driver_address)
+    if driver is None:
+        msg = f"Could not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rider = riders_manager.get(trip.rider)
+    if driver is None:
+        msg = f"Could not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    trip_score_rider = payload.trip_score_rider
+    final_distance = payload.final_distance
+    start_timestamp = payload.start_timestamp
+    end_timestamp = payload.end_timestamp
+
+    # TODO: use peer signature to validate
+    valid_peer_signature = payload.peer_signature is not None and payload.peer_signature != "" and \
+        payload.trip_score_rider is not None # validate(signature,peer)
+
+    if not valid_peer_signature:
+        if trip_quarantined:
+            # compare claimed results
+            if trip.end_claims.get(peer) is None:
+                msg = f"Peer has no claims."
+                logger.warning(msg)
+                rollup.report(str2hex(msg))
+                return False
+            if trip.end_claims[peer][1] == final_distance and trip.end_claims[peer][2] == start_timestamp \
+                    and trip.end_claims[peer][3] == end_timestamp:
+                # everybody agrees
+                # update score if peer is rider
+                if peer == trip.rider:
+                    trip_score_rider = trip.end_claims[peer][4]
+            else:
+                # escalate to dispute so dao will rule
+                trips_manager.add_end_claim(trip_id,data.metadata.msg_sender,data.metadata.timestamp,
+                    final_distance,start_timestamp,end_timestamp,trip_score_rider)
+                trips_manager.dispute_trip(trip_id,data.metadata.timestamp)
+                rollup.notice(str2hex(f"{{\"action\":\"finish_trip\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+                return True
+        else:
+            trips_manager.quarantine_trip(trip_id,data.metadata.timestamp)
+            trips_manager.add_end_claim(trip_id,data.metadata.msg_sender,data.metadata.timestamp,
+                final_distance,start_timestamp,end_timestamp,trip_score_rider)
+            rollup.notice(str2hex(f"{{\"action\":\"finish_trip\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+            return True
+
+    # TODO: enhance verifications
+
+    try:
+        rider.update_n_trips()
+        driver.update_reputation(trip_score_rider)
+        final_value = trips_manager.get_final_trip_value(final_distance,end_timestamp-start_timestamp,trip.locked_assets)
+        insurance_value = trips_manager.get_insurance_value(final_value,driver.reputation)
+        bank.transfer(settings.locked_assets_address,settings.insurance_address,insurance_value)
+        bank.transfer(settings.locked_assets_address,driver.address,final_value - insurance_value)
+        bank.transfer(settings.locked_assets_address,trip.rider,trip.locked_assets - final_value)
+        trips_manager.end_trip(trip,data.metadata.timestamp,start_timestamp,end_timestamp)
+
+    except Exception as e:
+        msg = f"Could not finish trip. Error: {e}"
+        logger.error(f"{msg}\n{traceback.format_exc()}")
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip\",\"address\":\"{driver.address}\",\"balance\":\"{bank.balance(driver.address)}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip\",\"address\":\"{trip.rider}\",\"balance\":\"{bank.balance(trip.rider)}\"}}"))
+    rollup.report(str2hex(trip.json()))
+    # TODO: add reputation commitment to merkle tree (extra endpoit too)
+
+    return True
+
+# timeout trip
+@json_router.advance({'action': 'timeout_trip'})
+def timeout_trip(rollup: Rollup, data: RollupData) -> bool:
+    logger.info("Running timeout finished trip")
+    # finish trip in quarantine by timeout
+
+    payload = TimeoutTripInput.parse_obj(data.json_payload())
+
+    trip = trips_manager.get_quarantine(payload.trip_id)
+    if trip is None:
+        msg = f"Could not get trip."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    driver = drivers_manager.get(trip.accepted_offer.driver_address)
+    if driver is None:
+        msg = f"Could not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rider = riders_manager.get(trip.rider)
+    if driver is None:
+        msg = f"Could not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    claims = list(trip.end_claims.items())
+    if len(claims) != 1:
+        msg = f"Invalid trip."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+    
+    claim = claims[0]
+
+    final_distance = claim[1][1]
+    start_timestamp = claim[1][2]
+    end_timestamp = claim[1][3]
+    if trip.rider == claim[0]:
+        score = claim[1][4]
+    else:
+        score = driver.reputation
+
+    try:
+        rider.update_n_trips()
+        driver.update_reputation(score)
+        final_value = trips_manager.get_final_trip_value(final_distance,end_timestamp-start_timestamp,trip.locked_assets)
+        insurance_value = trips_manager.get_insurance_value(value,driver.reputation)
+        bank.transfer(settings.locked_assets_address,settings.insurance_address,insurance_value)
+        bank.transfer(settings.locked_assets_address,driver.address,final_value - insurance_value)
+        bank.transfer(settings.locked_assets_address,trip.rider,trip.locked_assets - final_value)
+        trips_manager.end_trip(trip,data.metadata.timestamp,start_timestamp,end_timestamp)
+
+    except Exception as e:
+        msg = f"Could not finish trip. Error: {e}"
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip_dispute\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip_dispute\",\"address\":\"{driver.address}\",\"balance\":\"{bank.balance(driver.address)}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip_dispute\",\"address\":\"{trip.rider}\",\"balance\":\"{bank.balance(trip.rider)}\"}}"))
+    rollup.report(str2hex(trip.json()))
+
+    try:
+        trips_manager.timeout_trip(data.metadata.timestamp,trip_id)
+    except Exception as e:
+        msg = f"Could not timeout trip. Error: {e}"
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"timeout_trip\",\"address\":\"{data.metadata.msg_sender}\"}}"))
+
+    return True
+
+# finish_trip_dispute
+@json_router.advance({'action': 'finish_trip_dispute'})
+def finish_trip_dispute(rollup: Rollup, data: RollupData) -> bool:
+    logger.info("Running finish trip dispute")
+    
+    # required dao address
+    if data.metadata.msg_sender.lower() != settings.dispute_address.lower():
+        msg = f"Could not finish trip in dispute. Sender not dispute address."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    payload = FinishTripDisputeInput.parse_obj(data.json_payload())
+
+    trip = trips_manager.get_dispute(payload.trip_id)
+    if trip is None:
+        msg = f"Could not get trip."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    driver = drivers_manager.get(trip.accepted_offer.driver_address)
+    if driver is None:
+        msg = f"Could not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rider = riders_manager.get(trip.rider)
+    if driver is None:
+        msg = f"Could not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    score = payload.score
+    final_distance = payload.final_distance
+    start_timestamp = payload.start_timestamp
+    end_timestamp = payload.end_timestamp
+
+    try:
+        rider.update_n_trips()
+        driver.update_reputation(score)
+        final_value = trips_manager.get_final_trip_value(final_distance,end_timestamp-start_timestamp,trip.locked_assets)
+        insurance_value = trips_manager.get_insurance_value(value,driver.reputation)
+        bank.transfer(settings.locked_assets_address,settings.insurance_address,insurance_value)
+        bank.transfer(settings.locked_assets_address,driver.address,final_value - insurance_value)
+        bank.transfer(settings.locked_assets_address,trip.rider,trip.locked_assets - final_value)
+        trips_manager.end_trip(trip,data.metadata.timestamp,start_timestamp,end_timestamp)
+
+    except Exception as e:
+        msg = f"Could not finish trip. Error: {e}"
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip_dispute\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip_dispute\",\"address\":\"{driver.address}\",\"balance\":\"{bank.balance(driver.address)}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"finish_trip_dispute\",\"address\":\"{trip.rider}\",\"balance\":\"{bank.balance(trip.rider)}\"}}"))
+    rollup.report(str2hex(trip.json()))
+
     return True
 
 
@@ -376,13 +659,41 @@ def balance(rollup: Rollup, params: URLParameters) -> bool:
     return True
 
 
+# get rider info
+@url_router.inspect('rider/{addr}')
+def get_rider_info(rollup: Rollup, params: URLParameters) -> bool:
+    logger.info(f"Running rider info {params.path_params=}")
+
+    rider = riders_manager.get(params.path_params['addr'])
+
+    # send report
+    if rider is not None: rollup.report(str2hex(rider.json()))
+
+    return True
+
+# get driver info
+@url_router.inspect('driver/{addr}')
+def get_driver_info(rollup: Rollup, params: URLParameters) -> bool:
+    logger.info(f"Running driver info {params.path_params=}")
+
+    driver = drivers_manager.get(params.path_params['addr'])
+
+    # send report
+    if driver is not None: rollup.report(str2hex(driver.json()))
+
+    return True
+
 # get trip requests available for my position
 @url_router.inspect('match_trips/{geohash}')
 def get_trip_requests_near(rollup: Rollup, params: URLParameters) -> bool:
     logger.info(f"Running near trip requests {params.path_params=}")
 
+    ts = None
+    if 'ts' in params.query_params:
+        ts = params.query_params["ts"][0]
+
     # match geohash and send list of nearby trip requests
-    trips_near = trips_manager.match_trips(params.path_params['geohash'])
+    trips_near = trips_manager.match_trips(params.path_params['geohash'],ts)
 
     # send report
     rollup.report(to_jsonhex(trips_near))
@@ -403,7 +714,7 @@ def get_trip_info(rollup: Rollup, params: URLParameters) -> bool:
 
 # get trip info by driver offer
 @url_router.inspect('trip_by_driver_offer/{addr}')
-def get_trip_info(rollup: Rollup, params: URLParameters) -> bool:
+def get_trip_by_driver_offer(rollup: Rollup, params: URLParameters) -> bool:
     logger.info(f"Running trip info by driver offer {params.path_params=}")
 
     trip = trips_manager.get_trip_by_driver_offer(params.path_params['addr'])
@@ -415,7 +726,7 @@ def get_trip_info(rollup: Rollup, params: URLParameters) -> bool:
 
 # get trip info by driver
 @url_router.inspect('trip_by_driver/{addr}')
-def get_trip_info(rollup: Rollup, params: URLParameters) -> bool:
+def get_trip_by_driver(rollup: Rollup, params: URLParameters) -> bool:
     logger.info(f"Running trip info by driver {params.path_params=}")
 
     trip = trips_manager.get_trip_by_driver(params.path_params['addr'])
@@ -427,10 +738,46 @@ def get_trip_info(rollup: Rollup, params: URLParameters) -> bool:
 
 # get trip info by rider
 @url_router.inspect('trip_by_rider/{addr}')
-def get_trip_info(rollup: Rollup, params: URLParameters) -> bool:
+def get_trip_by_rider(rollup: Rollup, params: URLParameters) -> bool:
     logger.info(f"Running trip info by rider {params.path_params=}")
 
     trip = trips_manager.get_trip_by_rider(params.path_params['addr'])
+
+    # send report
+    if trip is not None: rollup.report(str2hex(trip.json()))
+
+    return True
+
+# get quarantine trip info
+@url_router.inspect('trip_in_quarantine/{trip_id}')
+def get_trip_in_quarantine(rollup: Rollup, params: URLParameters) -> bool:
+    logger.info(f"Running quarantine trip info {params.path_params=}")
+
+    trip = trips_manager.get_quarantine(params.path_params['trip_id'])
+
+    # send report
+    if trip is not None: rollup.report(str2hex(trip.json()))
+
+    return True
+
+# get trip info by quarantined
+@url_router.inspect('trip_by_quarantined/{addr}')
+def get_trip_by_quarantined(rollup: Rollup, params: URLParameters) -> bool:
+    logger.info(f"Running trip info by quarantined {params.path_params=}")
+
+    trip = trips_manager.get_trip_by_quarantined(params.path_params['addr'])
+
+    # send report
+    if trip is not None: rollup.report(str2hex(trip.json()))
+
+    return True
+
+# get dispute trip info
+@url_router.inspect('trip_in_dispute/{trip_id}')
+def get_trip_in_dispute(rollup: Rollup, params: URLParameters) -> bool:
+    logger.info(f"Running dispute trip info {params.path_params=}")
+
+    trip = trips_manager.get_dispute(params.path_params['trip_id'])
 
     # send report
     if trip is not None: rollup.report(str2hex(trip.json()))
