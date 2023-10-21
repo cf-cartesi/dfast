@@ -46,7 +46,7 @@ class TripInfo {
   final String geohashDestination;
   final String tripCommitment;
   final int distance;
-  final Map<String, dynamic> offers;
+  final Map<String, TripOfferInfo> offers;
   final dynamic? acceptedOffer;
   final Map<String, dynamic> endClaims;
   final String status;
@@ -75,7 +75,8 @@ class TripInfo {
         geohashDestination = json['geohash_destination'],
         tripCommitment = json['trip_commitment'],
         distance = json['distance'],
-        offers = json['offers'],
+        offers = (json["offers"] as Map<String, dynamic>).map(
+                (key, value) => MapEntry(key, TripOfferInfo.fromJson(value))),//json['offers'],
         acceptedOffer = json['accepted_offer'],
         endClaims = json['end_claims'],
         status = json['status'];
@@ -88,6 +89,39 @@ class Report {
   
   Report.fromJson(Map<String, dynamic> json):
       payload = hexToAscii((json["payload"] as String).substring(2));
+}
+
+// {
+//   "driver_address": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+//   "driver_geohash": "75cm8u",
+//   "driver_n_trips": 0,
+//   "driver_reputation": 6000,
+//   "timestamp": 1697895744,
+//   "distance": 2758,
+//   "eta": 1697895744
+// }
+class TripOfferInfo {
+  final String driverAddress;
+  final String driverGeohash;
+  final int driverNTrips;
+  final int driverReputation;
+  final int timestamp;
+  final double distance;
+  final int eta;
+
+  TripOfferInfo(
+      this.driverAddress, this.driverGeohash, this.driverNTrips,
+      this.driverReputation, this.timestamp, this.distance, this.eta
+  );
+
+  TripOfferInfo.fromJson(Map<String, dynamic> json):
+    driverAddress = json['driver_address'],
+    driverGeohash = json['driver_geohash'],
+    driverNTrips = json['driver_n_trips'],
+    driverReputation = json['driver_reputation'],
+    timestamp = json['timestamp'],
+    distance = (json['distance'] as num).toDouble(),
+    eta = json['eta'];
 }
 
 Future<TripInfo> getTripInfo(String tripId) async {

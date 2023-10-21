@@ -45,12 +45,14 @@ class _UserHomePageState extends State<UserHomePage>{
   // trip
   late Trip trip;
   late TripStatus tripStatus;
-  List<dynamic> drivers = List.empty();
+  late bool monitoringDriversOffers;
+  List<TripOfferInfo> driversOffers = [];
 
   @override
   void initState() {
     super.initState();
     tripStatus = TripStatus.creating;
+    monitoringDriversOffers = false;
   }
 
 
@@ -255,6 +257,27 @@ class _UserHomePageState extends State<UserHomePage>{
 
     print(await getTripInfo(tripId));
     FeedbackWidget(context).stopLoading();
+    monitoringDriversOffers = true;
+    _monitorDriverOffers();
+  }
+
+  void _monitorDriverOffers() async {
+    while (monitoringDriversOffers) {
+      await Future.delayed(const Duration(seconds: 5));
+      TripInfo tripInfo = await getTripInfo(trip.id);
+
+      // check if the offers changes (new/canceled)
+      if (tripInfo.offers.keys.length != driversOffers.length) {
+        FeedbackWidget(context).showSnackBarMessage(
+            'Your driver offers have changed!',
+            Colors.green
+        );
+
+        setState(() {
+          driversOffers = tripInfo.offers.values.toList();
+        });
+      }
+    }
   }
 
   // manage trip actions
@@ -309,7 +332,84 @@ class _UserHomePageState extends State<UserHomePage>{
     return AlertDialog(
       title: const Text('Choose a Driver'),
       scrollable: true,
-      content: null,
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 300.0,
+        child: ListView.builder(
+          scrollDirection: Axis.vertical,
+          itemCount: driversOffers.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Card(
+              margin: const EdgeInsets.symmetric(
+                  horizontal: 1.0,
+                  vertical: 1.0
+              ),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(
+                      Radius.circular(8.0)
+                  )
+              ),
+              child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: GestureDetector(
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.drive_eta_sharp,
+                                size: 32,
+                                color: Colors.blue,
+                              ),
+                              const Spacer(),
+                              Text(
+                                '${driversOffers[index].driverAddress.substring(0, 6)}'
+                                    '...'
+                                    '${driversOffers[index].driverAddress.substring(
+                                    driversOffers[index].driverAddress.length-4)
+                                }',
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    letterSpacing: 0.0
+                                ),
+                              ),
+                              const Spacer(),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star, color: Colors.blue,),
+                                  Text(driversOffers[index].driverReputation.toString())
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          Row(
+                            children: [
+                              Text(
+                                'Distance: ${
+                                  driversOffers[index].distance
+                                } m'
+                              ),
+                              const Spacer(),
+                              Text(
+                                  'Trips: ${driversOffers[index].driverNTrips}'
+                              ),
+                            ]
+                          ),
+                          Text(
+                              'ETA: ${
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      driversOffers[index].eta
+                              )}'
+                          ),
+                        ],
+                      )
+                  )
+              ),
+            );
+          }
+      )
+      )
     );
   }
 

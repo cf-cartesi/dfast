@@ -29,7 +29,7 @@ class FeedbackWidget {
     Navigator.of(context).pop();
   }
 
-  Future<void> showError(String error) async {
+  Future<void> showSnackBarMessage(String msg, Color color) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         action: SnackBarAction(
@@ -38,8 +38,8 @@ class FeedbackWidget {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
           },
         ),
-        backgroundColor: Colors.red,
-        content: Text(error),
+        backgroundColor: color,
+        content: Text(msg),
       ),
     );
   }
