@@ -60,12 +60,50 @@ class _UserHomePageState extends State<UserHomePage>{
   Widget build(BuildContext context) {
     user = ModalRoute.of(context)!.settings.arguments as User;
 
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: _handlePop,
+      child: Scaffold(
           appBar: AppBar(title: const Text('DFaST'), centerTitle: true,),
           endDrawer: UserDrawer(user: user, currentRoute: UserHomePage.route),
           body: AnimatedMap(controller: mapController),
           floatingActionButton: _selectButtonFromState()
+      ),
+    );
+  }
+
+  Future <bool> _handlePop() async {
+    if (tripStatus == TripStatus.creating) return true;
+
+    if (tripStatus == TripStatus.waitingForDriver) {
+      _navigationPopAlert(
+          'DFaST is searching for a driver',
+          'If you want to leave, cancel the trip first.'
       );
+    } else if (tripStatus == TripStatus.riding) {
+      _navigationPopAlert(
+          'You are in a ride right now',
+          'If you want to leave, finish the trip first.'
+      );
+    }
+
+    Navigator.of(context).pop(true);
+    return true;
+  }
+
+  void _navigationPopAlert(String title, String content) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Ok'),
+          ),
+        ]
+      )
+    );
   }
 
   Widget _selectButtonFromState() {
@@ -322,6 +360,7 @@ class _UserHomePageState extends State<UserHomePage>{
     );
     setState(() {
       tripStatus = TripStatus.creating;
+      mapController.clearMap();
     });
   }
 
@@ -390,7 +429,7 @@ class _UserHomePageState extends State<UserHomePage>{
                                 Text(
                                     'ETA: ${
                                         DateTime.fromMillisecondsSinceEpoch(
-                                            driversOffers[index].eta
+                                            driversOffers[index].eta * 1000
                                         )}'
                                 ),
                               ],
@@ -440,6 +479,15 @@ class _UserHomePageState extends State<UserHomePage>{
         jsonEncode(payload),
         _checkTripAccepted
     );
+
+    // reveal commitment to the driver
+    user.sendMessage(jsonEncode({
+      "nonce": trip.tripCommitmentNonce,
+      "route": trip.route
+    }), offer.driverAddress);
+
+    // start timestamp
+    trip.startTimestamp = DateTime.timestamp().millisecondsSinceEpoch * 1000;
   }
 
   void _checkTripAccepted(InputAdded event) async {
@@ -459,11 +507,8 @@ class _UserHomePageState extends State<UserHomePage>{
   // riding Actions
   Widget _ridingButton() {
     return FloatingActionButton.extended(
-      onPressed: () { showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return _buildInsertDestinationLatLonAlertDialog();
-          });
+      onPressed: () {
+          _finishTrip();
       },
       label: const Row(
         children: [
@@ -473,5 +518,28 @@ class _UserHomePageState extends State<UserHomePage>{
       ),
       backgroundColor: Colors.green,
     );
+  }
+
+  void _finishTrip() {
+    trip.endTimestamp = DateTime.timestamp().millisecondsSinceEpoch * 1000;
+
+    Map<String, dynamic> payload = {
+      "action":"finish_trip",
+      "trip_id":trip.id,
+      "final_distance":trip.distance, // should actually calculate the distance
+      "start_timestamp":trip.startTimestamp,
+      "end_timestamp":trip.endTimestamp,
+      "trip_score_rider":10000 // score hardcoded
+    };
+
+    addInput(user.account.credentials.privateKey,
+        jsonEncode(payload),
+        (InputAdded event) { }
+    );
+    setState(() {
+      tripStatus = TripStatus.creating;
+      mapController.clearMap();
+    });
+
   }
 }

@@ -20,7 +20,10 @@ class Trip {
   late final int timeout;
   String id = "";
 
-  late final int _tripCommitmentNonce;
+  late int startTimestamp;
+  late int endTimestamp;
+  late int tripScoreRider;
+  late final int tripCommitmentNonce;
   String _tripCommitment = "";
 
   Trip._constructor(
@@ -87,12 +90,12 @@ class Trip {
 
     int max = 0x7fffffff; // 32-bit
     try {
-      _tripCommitmentNonce = Random.secure().nextInt(max);
+      tripCommitmentNonce = Random.secure().nextInt(max);
     } on UnsupportedError catch(_) {
-      _tripCommitmentNonce = Random().nextInt(max);
+      tripCommitmentNonce = Random().nextInt(max);
     }
 
-    _tripCommitment = bytesToHex(keccakUtf8('$route-$_tripCommitmentNonce'));
+    _tripCommitment = bytesToHex(keccakUtf8('$route-$tripCommitmentNonce'));
     return _tripCommitment;
   }
 
@@ -101,12 +104,12 @@ class Trip {
 
     int max = 0x7fffffff; // 32-bit
     try {
-      _tripCommitmentNonce = Random.secure().nextInt(max);
+      tripCommitmentNonce = Random.secure().nextInt(max);
     } on UnsupportedError catch(_) {
-      _tripCommitmentNonce = Random().nextInt(max);
+      tripCommitmentNonce = Random().nextInt(max);
     }
 
-    _tripCommitment = bytesToHex(keccakUtf8('$route-$_tripCommitmentNonce'));
+    _tripCommitment = bytesToHex(keccakUtf8('$route-$tripCommitmentNonce'));
     return _tripCommitment;
   }
 }

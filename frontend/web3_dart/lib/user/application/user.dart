@@ -1,6 +1,6 @@
-import 'package:http/http.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:web3dart/web3dart.dart';
-
 
 import '../../shared/app_conf.dart';
 import '../../web3Account/application/account.dart';
@@ -16,7 +16,7 @@ class User {
   }
 
   Future<EtherAmount> getBalance() async {
-    final client = Web3Client(AppConf.info.rpcUrl, Client());
+    final client = Web3Client(AppConf.info.rpcUrl, http.Client());
     return await client.getBalance(getAddress());
   }
 
@@ -69,5 +69,14 @@ class User {
     }
 
     return null;
+  }
+
+
+  // TEST server
+  void sendMessage(String msg, String receiver) async {
+    debugPrint('http://10.0.2.2:8081/$receiver/$msg');
+    await http.get(
+        Uri.parse('http://10.0.2.2:8081/$receiver/$msg')
+    );
   }
 }
