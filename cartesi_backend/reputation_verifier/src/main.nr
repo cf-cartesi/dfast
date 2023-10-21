@@ -18,18 +18,18 @@ fn main(
 
     // calculate reputation
     assert(reputation <= 10000);
-    //let mut nt = n_trips;
-    //if n_trips > 99 {
-    //    nt = 99;
-    //}
-    //if n_trips < 1 {
-    //    nt = 1;
-    //}
-    //let mut rep = (nt * reputation + score) / (nt+1);
-    //if rep > 10000 {
-    //    rep = 10000;
-    //}
-    //std::println(rep);
+    let mut nt = n_trips;
+    if n_trips > 99 {
+        nt = 99;
+    }
+    if n_trips < 1 {
+        nt = 1;
+    }
+    let mut rep = (nt * reputation + score) / (nt+1);
+    if rep > 10000 {
+        rep = 10000;
+    }
+    std::println(rep);
 
     // get pub key from priv
     let pubkey = std::scalar_mul::fixed_base(priv_key);
@@ -37,14 +37,12 @@ fn main(
     let pubkey_y = pubkey[1];
 
     // calculate commitment
-    //let calculated_commitment = std::hash::pedersen([pubkey_x, pubkey_y, secret,rep as Field]);
-    let calculated_commitment = std::hash::pedersen([pubkey_x, pubkey_y, secret,reputation as Field]);
+    let calculated_commitment = std::hash::pedersen([pubkey_x, pubkey_y, secret,rep as Field]);
     std::println(calculated_commitment);
 
     // assert commitment
     assert(calculated_commitment[0] == commitment);
-    //[rep as Field,calculated_commitment[0]]
-    [reputation as Field,calculated_commitment[0]]
+    [rep as Field,calculated_commitment[0]]
 }
 
 #[test]
