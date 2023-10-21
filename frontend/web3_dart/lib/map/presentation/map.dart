@@ -132,10 +132,10 @@ class AnimatedMapState extends State<AnimatedMap>
               child: FlutterMap(
                 mapController: mapController,
                 options: const MapOptions(
-                    initialCenter: LatLng(51.5, -0.09),
+                    initialCenter: LatLng(-15.72, -48.01), // Brasilia
                     initialZoom: 5,
-                    maxZoom: 10,
-                    minZoom: 3),
+                    maxZoom: 12,
+                    minZoom: 4),
                 children: [
                   TileLayer(
                     urlTemplate:

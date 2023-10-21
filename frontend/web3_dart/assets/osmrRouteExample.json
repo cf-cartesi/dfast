@@ -1,0 +1,1598 @@
+{
+  "code": "Ok",
+  "routes": [
+    {
+      "geometry": "`~zjCb|ufG~EiDvCz@tAzBDdHwL~CkEcCgGuKoCiNuCkEKgD|FqXcA{RhKeDdM^fImAjeAut@rKyD|t@}MbFbEjGrBj]fAxAna@zReF}@oDgHlB",
+      "legs": [
+        {
+          "steps": [
+            {
+              "geometry": "`~zjCb|ufG~EiD",
+              "maneuver": {
+                "bearing_after": 145,
+                "bearing_before": 0,
+                "location": [
+                  -43.207219,
+                  -22.916968
+                ],
+                "modifier": "right",
+                "type": "depart"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Zamenhof",
+              "intersections": [
+                {
+                  "out": 0,
+                  "entry": [
+                    true
+                  ],
+                  "bearings": [
+                    145
+                  ],
+                  "location": [
+                    -43.207219,
+                    -22.916968
+                  ]
+                }
+              ],
+              "weight": 22,
+              "duration": 22,
+              "distance": 151.3
+            },
+            {
+              "geometry": "`e{jCxvufGxA\\|@\\l@v@V\\HTDN?N@x@BzE",
+              "maneuver": {
+                "bearing_after": 196,
+                "bearing_before": 143,
+                "location": [
+                  -43.206369,
+                  -22.918085
+                ],
+                "modifier": "right",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Maia de Lacerda",
+              "intersections": [
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    false,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    15,
+                    195,
+                    330
+                  ],
+                  "location": [
+                    -43.206369,
+                    -22.918085
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    15,
+                    105,
+                    210
+                  ],
+                  "location": [
+                    -43.206523,
+                    -22.918542
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    30,
+                    105,
+                    225
+                  ],
+                  "location": [
+                    -43.206669,
+                    -22.918846
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    270,
+                    345
+                  ],
+                  "location": [
+                    -43.207655,
+                    -22.919292
+                  ]
+                }
+              ],
+              "weight": 47,
+              "duration": 47,
+              "distance": 320.9
+            },
+            {
+              "geometry": "tl{jCvevfGkEfAkCp@_Bd@",
+              "maneuver": {
+                "bearing_after": 340,
+                "bearing_before": 268,
+                "location": [
+                  -43.208757,
+                  -22.91931
+                ],
+                "modifier": "right",
+                "type": "end of road"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Aristides Lobo",
+              "intersections": [
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    345
+                  ],
+                  "location": [
+                    -43.208757,
+                    -22.91931
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    165,
+                    240,
+                    345
+                  ],
+                  "location": [
+                    -43.20912,
+                    -22.918294
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 1,
+                  "entry": [
+                    false,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    60,
+                    165,
+                    345
+                  ],
+                  "location": [
+                    -43.20937,
+                    -22.917586
+                  ]
+                }
+              ],
+              "weight": 37.3,
+              "duration": 37.3,
+              "distance": 256.8
+            },
+            {
+              "geometry": "|~zjCvjvfG[[YS}@g@u@[a@O",
+              "maneuver": {
+                "bearing_after": 40,
+                "bearing_before": 338,
+                "location": [
+                  -43.209555,
+                  -22.917112
+                ],
+                "modifier": "right",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Travessa Pastor Daniel Ribeiro",
+              "intersections": [
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    45,
+                    165,
+                    255,
+                    345
+                  ],
+                  "location": [
+                    -43.209555,
+                    -22.917112
+                  ]
+                }
+              ],
+              "weight": 19.1,
+              "duration": 19.1,
+              "distance": 132.8
+            },
+            {
+              "geometry": "pxzjCrfvfGwAaCaBsC_@s@_@q@MYKWK]",
+              "maneuver": {
+                "bearing_after": 53,
+                "bearing_before": 22,
+                "location": [
+                  -43.208897,
+                  -22.916087
+                ],
+                "modifier": "straight",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Haddock Lobo",
+              "intersections": [
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    60,
+                    210,
+                    240
+                  ],
+                  "location": [
+                    -43.208897,
+                    -22.916087
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    60,
+                    150,
+                    240
+                  ],
+                  "location": [
+                    -43.208249,
+                    -22.915647
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    60,
+                    150,
+                    240
+                  ],
+                  "location": [
+                    -43.207512,
+                    -22.915158
+                  ]
+                }
+              ],
+              "weight": 20.6,
+              "duration": 20.6,
+              "distance": 285.1
+            },
+            {
+              "geometry": "pozjCfxufGe@mCCOMs@[yBOq@Ok@CIOc@OYMOIE}AwB",
+              "maneuver": {
+                "bearing_after": 73,
+                "bearing_before": 67,
+                "location": [
+                  -43.206599,
+                  -22.914648
+                ],
+                "modifier": "straight",
+                "type": "new name"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Estácio de Sá",
+              "intersections": [
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    75,
+                    165,
+                    255,
+                    285
+                  ],
+                  "location": [
+                    -43.206599,
+                    -22.914648
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    60,
+                    75,
+                    255
+                  ],
+                  "location": [
+                    -43.205551,
+                    -22.914373
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    75,
+                    195,
+                    255
+                  ],
+                  "location": [
+                    -43.204937,
+                    -22.914231
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    60,
+                    180,
+                    240
+                  ],
+                  "location": [
+                    -43.204109,
+                    -22.913885
+                  ]
+                }
+              ],
+              "weight": 28,
+              "duration": 28,
+              "distance": 367.6
+            },
+            {
+              "geometry": "bgzjCfdufGKa@Ca@AS@[Bs@Ja@j@_C\\wARw@La@rA{EHc@B[LgADYN_B@KA[E{@AU_@}COeAKkACe@OuAAEAY",
+              "maneuver": {
+                "bearing_after": 67,
+                "bearing_before": 49,
+                "location": [
+                  -43.203401,
+                  -22.913303
+                ],
+                "modifier": "straight",
+                "type": "new name"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Frei Caneca",
+              "intersections": [
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    false,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    45,
+                    75,
+                    225
+                  ],
+                  "location": [
+                    -43.203401,
+                    -22.913303
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    105,
+                    270,
+                    300
+                  ],
+                  "location": [
+                    -43.202564,
+                    -22.913242
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    0,
+                    120,
+                    300
+                  ],
+                  "location": [
+                    -43.200855,
+                    -22.913839
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    105,
+                    285,
+                    345
+                  ],
+                  "location": [
+                    -43.199444,
+                    -22.914334
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    105,
+                    225,
+                    285
+                  ],
+                  "location": [
+                    -43.199082,
+                    -22.914398
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    90,
+                    285,
+                    300
+                  ],
+                  "location": [
+                    -43.19847,
+                    -22.914511
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    75,
+                    165,
+                    255
+                  ],
+                  "location": [
+                    -43.197072,
+                    -22.914312
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    75,
+                    255,
+                    345
+                  ],
+                  "location": [
+                    -43.196719,
+                    -22.914231
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    75,
+                    255,
+                    345
+                  ],
+                  "location": [
+                    -43.196341,
+                    -22.91417
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    75,
+                    165,
+                    255
+                  ],
+                  "location": [
+                    -43.196153,
+                    -22.914146
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    75,
+                    255,
+                    345
+                  ],
+                  "location": [
+                    -43.195722,
+                    -22.914066
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    45,
+                    90,
+                    255
+                  ],
+                  "location": [
+                    -43.195692,
+                    -22.914061
+                  ]
+                }
+              ],
+              "weight": 54.8,
+              "duration": 54.8,
+              "distance": 835.9
+            },
+            {
+              "geometry": "xkzjCfssfGVu@FKLGLEp@QhCw@XKjA]VIPGXEd@Eh@Av@BfBLfCP`@Bj@?v@C",
+              "maneuver": {
+                "bearing_after": 115,
+                "bearing_before": 84,
+                "location": [
+                  -43.195556,
+                  -22.914049
+                ],
+                "modifier": "slight right",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Doutor Lagden",
+              "intersections": [
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    75,
+                    120,
+                    270
+                  ],
+                  "location": [
+                    -43.195556,
+                    -22.914049
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    160,
+                    339,
+                    348
+                  ],
+                  "location": [
+                    -43.194729,
+                    -22.915417
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    5,
+                    188,
+                    194,
+                    223
+                  ],
+                  "location": [
+                    -43.19444,
+                    -22.916822
+                  ]
+                }
+              ],
+              "weight": 36.2,
+              "duration": 36.2,
+              "distance": 549.9
+            },
+            {
+              "geometry": "xh{jCfmsfGb@Af@Cd@Er@Mn@QZK\\QZQ\\W^W",
+              "maneuver": {
+                "bearing_after": 177,
+                "bearing_before": 174,
+                "location": [
+                  -43.1946,
+                  -22.918688
+                ],
+                "modifier": "straight",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Avenida Trinta e Um de Março",
+              "intersections": [
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    false,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    5,
+                    178,
+                    356
+                  ],
+                  "location": [
+                    -43.1946,
+                    -22.918688
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    150,
+                    180,
+                    345
+                  ],
+                  "location": [
+                    -43.194315,
+                    -22.919899
+                  ]
+                }
+              ],
+              "weight": 12.2,
+              "duration": 12.2,
+              "distance": 217
+            },
+            {
+              "geometry": "bt{jCzhsfG|q@af@~HuFv@e@^YpAy@",
+              "maneuver": {
+                "bearing_after": 143,
+                "bearing_before": 143,
+                "location": [
+                  -43.193903,
+                  -22.920498
+                ],
+                "modifier": "straight",
+                "type": "new name"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Túnel Santa Bárbara",
+              "intersections": [
+                {
+                  "out": 0,
+                  "classes": [
+                    "tunnel"
+                  ],
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    150,
+                    330
+                  ],
+                  "location": [
+                    -43.193903,
+                    -22.920498
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    150,
+                    330
+                  ],
+                  "location": [
+                    -43.186226,
+                    -22.930525
+                  ]
+                }
+              ],
+              "weight": 81.4,
+              "duration": 81.4,
+              "distance": 1437.3
+            },
+            {
+              "geometry": "jv}jChvqfGVSPMz@]\\Mz@[hAc@rAg@h@Qt@SvB]zASrB_@`@C",
+              "maneuver": {
+                "bearing_after": 140,
+                "bearing_before": 146,
+                "location": [
+                  -43.185814,
+                  -22.931095
+                ],
+                "modifier": "straight",
+                "type": "new name"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Viaduto Engenheiro Noronha",
+              "intersections": [
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    135,
+                    165,
+                    330
+                  ],
+                  "location": [
+                    -43.185814,
+                    -22.931095
+                  ]
+                }
+              ],
+              "weight": 30.8,
+              "duration": 30.8,
+              "distance": 478.8
+            },
+            {
+              "geometry": "ro~jCvlqfGtA_@j@M|Ey@D?BAFA^ElB[PEHALENExAUzB]tAWXGXInBa@`AMb@I",
+              "maneuver": {
+                "bearing_after": 160,
+                "bearing_before": 167,
+                "location": [
+                  -43.184275,
+                  -22.935144
+                ],
+                "modifier": "straight",
+                "type": "new name"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Pinheiro Machado",
+              "intersections": [
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    165,
+                    330,
+                    345
+                  ],
+                  "location": [
+                    -43.184275,
+                    -22.935144
+                  ]
+                },
+                {
+                  "out": 0,
+                  "in": 2,
+                  "entry": [
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    165,
+                    240,
+                    345
+                  ],
+                  "location": [
+                    -43.18405,
+                    -22.935791
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 2,
+                  "entry": [
+                    false,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    75,
+                    165,
+                    345
+                  ],
+                  "location": [
+                    -43.183757,
+                    -22.936925
+                  ]
+                }
+              ],
+              "weight": 40,
+              "duration": 40,
+              "distance": 649.2
+            },
+            {
+              "geometry": "bs_kC|bqfGx@WFCzBm@PCHAH@L@LFt@v@",
+              "maneuver": {
+                "bearing_after": 157,
+                "bearing_before": 165,
+                "location": [
+                  -43.182708,
+                  -22.940819
+                ],
+                "modifier": "straight",
+                "type": "new name"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Fernando Ferrari",
+              "intersections": [
+                {
+                  "out": 0,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    165,
+                    345
+                  ],
+                  "location": [
+                    -43.182708,
+                    -22.940819
+                  ]
+                }
+              ],
+              "weight": 10.6,
+              "duration": 10.6,
+              "distance": 191.3
+            },
+            {
+              "geometry": "x|_kCpbqfGhAlAfAr@rAr@ZPB@D@\\JrB\\|@LbFj@PBP?`DBj@?`@@L?hA@J?R?vE@r@?P?",
+              "maneuver": {
+                "bearing_after": 223,
+                "bearing_before": 222,
+                "location": [
+                  -43.182645,
+                  -22.942374
+                ],
+                "modifier": "straight",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Muniz Barreto",
+              "intersections": [
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    45,
+                    60,
+                    225
+                  ],
+                  "location": [
+                    -43.182645,
+                    -22.942374
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    15,
+                    105,
+                    195,
+                    285
+                  ],
+                  "location": [
+                    -43.183725,
+                    -22.943855
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    15,
+                    105,
+                    195
+                  ],
+                  "location": [
+                    -43.183947,
+                    -22.944747
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    15,
+                    90,
+                    180,
+                    270
+                  ],
+                  "location": [
+                    -43.184192,
+                    -22.946074
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    0,
+                    180,
+                    270
+                  ],
+                  "location": [
+                    -43.184211,
+                    -22.946881
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ],
+                  "location": [
+                    -43.184234,
+                    -22.947867
+                  ]
+                }
+              ],
+              "weight": 66.699999999,
+              "duration": 66.699999999,
+              "distance": 807.7
+            },
+            {
+              "geometry": "bhakCnlqfGJfB@^@j@Dv@@j@@H?PBz@?N@n@Bj@@dABv@?\\@hA?^?~@BvA?N@NLdAXnB",
+              "maneuver": {
+                "bearing_after": 261,
+                "bearing_before": 180,
+                "location": [
+                  -43.184241,
+                  -22.9493
+                ],
+                "modifier": "right",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua São Clemente",
+              "intersections": [
+                {
+                  "out": 3,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ],
+                  "location": [
+                    -43.184241,
+                    -22.9493
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    270
+                  ],
+                  "location": [
+                    -43.184918,
+                    -22.949369
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    270
+                  ],
+                  "location": [
+                    -43.185417,
+                    -22.949405
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    270
+                  ],
+                  "location": [
+                    -43.185692,
+                    -22.949426
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    0,
+                    90,
+                    270
+                  ],
+                  "location": [
+                    -43.185781,
+                    -22.949429
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    270
+                  ],
+                  "location": [
+                    -43.186157,
+                    -22.949453
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    0,
+                    90,
+                    270
+                  ],
+                  "location": [
+                    -43.186397,
+                    -22.949464
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    270
+                  ],
+                  "location": [
+                    -43.186623,
+                    -22.949477
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    270
+                  ],
+                  "location": [
+                    -43.186971,
+                    -22.949489
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    false
+                  ],
+                  "bearings": [
+                    90,
+                    270,
+                    345
+                  ],
+                  "location": [
+                    -43.187395,
+                    -22.949509
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    270
+                  ],
+                  "location": [
+                    -43.187774,
+                    -22.949515
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    270,
+                    330
+                  ],
+                  "location": [
+                    -43.187927,
+                    -22.949515
+                  ]
+                },
+                {
+                  "out": 1,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    270,
+                    330
+                  ],
+                  "location": [
+                    -43.188252,
+                    -22.949524
+                  ]
+                },
+                {
+                  "out": 2,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    90,
+                    165,
+                    255,
+                    345
+                  ],
+                  "location": [
+                    -43.188854,
+                    -22.949552
+                  ]
+                }
+              ],
+              "weight": 49,
+              "duration": 49,
+              "distance": 569.8
+            },
+            {
+              "geometry": "|jakC~nrfGfR_FRE",
+              "maneuver": {
+                "bearing_after": 160,
+                "bearing_before": 255,
+                "location": [
+                  -43.189761,
+                  -22.949745
+                ],
+                "modifier": "left",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Dona Mariana",
+              "intersections": [
+                {
+                  "out": 1,
+                  "in": 0,
+                  "entry": [
+                    false,
+                    true,
+                    true
+                  ],
+                  "bearings": [
+                    75,
+                    165,
+                    255
+                  ],
+                  "location": [
+                    -43.189761,
+                    -22.949745
+                  ]
+                }
+              ],
+              "weight": 41.1,
+              "duration": 41.1,
+              "distance": 372
+            },
+            {
+              "geometry": "x~akCxgrfG}@oD",
+              "maneuver": {
+                "bearing_after": 68,
+                "bearing_before": 161,
+                "location": [
+                  -43.188611,
+                  -22.952931
+                ],
+                "modifier": "left",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Voluntários da Pátria",
+              "intersections": [
+                {
+                  "out": 0,
+                  "in": 3,
+                  "entry": [
+                    true,
+                    true,
+                    false,
+                    false
+                  ],
+                  "bearings": [
+                    75,
+                    165,
+                    255,
+                    345
+                  ],
+                  "location": [
+                    -43.188611,
+                    -22.952931
+                  ]
+                }
+              ],
+              "weight": 12.3,
+              "duration": 12.3,
+              "distance": 96.3
+            },
+            {
+              "geometry": "z|akChbrfGgHlB",
+              "maneuver": {
+                "bearing_after": 340,
+                "bearing_before": 68,
+                "location": [
+                  -43.187733,
+                  -22.952622
+                ],
+                "modifier": "left",
+                "type": "turn"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Guilhermina Guinle",
+              "intersections": [
+                {
+                  "out": 2,
+                  "in": 1,
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "bearings": [
+                    75,
+                    255,
+                    345
+                  ],
+                  "location": [
+                    -43.187733,
+                    -22.952622
+                  ]
+                }
+              ],
+              "weight": 24.9,
+              "duration": 24.9,
+              "distance": 173
+            },
+            {
+              "geometry": "rsakCverfG",
+              "maneuver": {
+                "bearing_after": 0,
+                "bearing_before": 341,
+                "location": [
+                  -43.188277,
+                  -22.951143
+                ],
+                "modifier": "left",
+                "type": "arrive"
+              },
+              "mode": "driving",
+              "driving_side": "right",
+              "name": "Rua Guilhermina Guinle",
+              "intersections": [
+                {
+                  "in": 0,
+                  "entry": [
+                    true
+                  ],
+                  "bearings": [
+                    161
+                  ],
+                  "location": [
+                    -43.188277,
+                    -22.951143
+                  ]
+                }
+              ],
+              "weight": 0,
+              "duration": 0,
+              "distance": 0
+            }
+          ],
+          "summary": "Túnel Santa Bárbara, Rua Muniz Barreto",
+          "weight": 634,
+          "duration": 634,
+          "distance": 7892.8
+        }
+      ],
+      "weight_name": "routability",
+      "weight": 634,
+      "duration": 634,
+      "distance": 7892.8
+    }
+  ],
+  "waypoints": [
+    {
+      "hint": "kpQtgP___39oAAAAQgEAAAAAAAAAAAAA_KiQQlZXF0MAAAAAAAAAAGgAAABCAQAAAAAAAAAAAAA5BAAAzbVs_ZhQov5TtGz9pE-i_gAADwlcDBh4",
+      "distance": 47.261424906,
+      "name": "Rua Zamenhof",
+      "location": [
+        -43.207219,
+        -22.916968
+      ]
+    },
+    {
+      "hint": "OfoEgP___3_5AAAA4wEAAAAAAAA2AAAAQgctQ-AMIkMAAAAAX5u-QfkAAADjAQAAAAAAADYAAAA5BAAAy_9s_RnLof4n_mz9lsqh_gAAXxVcDBh4",
+      "distance": 45.445190834,
+      "name": "Rua Guilhermina Guinle",
+      "location": [
+        -43.188277,
+        -22.951143
+      ]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,9 @@ class _UserHomePageState extends State<UserHomePage>{
   late LatLng destLocation;
 
   final mapController = AnimatedMapController();
+
+  // trip
+  late Trip trip;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -133,9 +138,9 @@ class _UserHomePageState extends State<UserHomePage>{
     currLocation = LatLng(position.latitude, position.longitude);
     destLocation = LatLng(destinationLat, destinationLng);
 
-    final route = await getRoute(currLocation, destLocation);
+    trip = await Trip.generate(currLocation, destLocation);
 
-    mapController.addTripToMap(currLocation, destLocation, route);
+    mapController.addTripToMap(currLocation, destLocation, trip.route);
     await Future.delayed(const Duration(seconds: 1)); // wait map animation
   }
 
@@ -196,15 +201,15 @@ class _UserHomePageState extends State<UserHomePage>{
   }
 
   Future<void> _confirmTrip() async {
-    final currLocationGeoHash = GeoHash.fromDecimalDegrees(
-        currLocation.longitude, currLocation.latitude, precision: 6);
-    final destLocationGeoHash = GeoHash.fromDecimalDegrees(
-        destLocation.longitude, destLocation.latitude, precision: 6);
-
-    addInput(
-        user.account.credentials.privateKey,
-        "DFaST: Current Geohash: ${currLocationGeoHash.geohash},"
-        "Destination Geohash: ${destLocationGeoHash.geohash}"
-    );
+    Map<String, dynamic> payload = {
+      "action": "trip_request",
+      "geohash_origin": trip.geohashOrigin,
+      "geohash_destination": trip.geohashDestination,
+      "trip_commitment": trip.generateTripCommitment(),
+      "distance": trip.distance,
+      "timeout": trip.timeout
+    };
+    
+    addInput(user.account.credentials.privateKey, jsonEncode(payload));
   }
 }
