@@ -32,7 +32,9 @@ drivers_manager = DriversManager()
 trips_manager = TripsManager()
 bank = Bank()
 settings = Settings()
-
+bank.deposit("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266", 1000000000000000000000000000000000000000000000000000000000000000) # passager
+bank.deposit("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 1000000000000000000000000000000000000000000000000000000000000000) # driver
+print(bank.wallets)
 #
 # Utils
 #
@@ -255,7 +257,7 @@ def trip_request(rollup: Rollup, data: RollupData) -> bool:
 
     # send notice with trip id and status
     trip = trips_manager.get_trip_by_rider(data.metadata.msg_sender)
-    rollup.notice(str2hex(f"{{\"action\":\"trip_request\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"trip_request\",\"address\":\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
     rollup.notice(str2hex(f"{{\"action\":\"trip_request\",\"address\":\"{data.metadata.msg_sender}\",\"balance\":\"{bank.balance(data.metadata.msg_sender)}\"}}"))
     if old_trip is not None:
         rollup.notice(str2hex(f"{{\"action\":\"trip_request\",\"address\":\"{data.metadata.msg_sender}\",\"trip\":\"{old_trip.id}\",\"status\":\"{old_trip.status}\"}}"))
@@ -290,7 +292,7 @@ def offer_trip(rollup: Rollup, data: RollupData) -> bool:
     # send notice with trip id and status
     trip_id = trips_manager.drivers_offer.get(data.metadata.msg_sender)
     trip = trips_manager.trips.get(trip_id)
-    rollup.notice(str2hex(f"{{\"action\":\"offer_trip\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"offer_trip\",\"address\"\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
 
     return True
 
@@ -385,7 +387,7 @@ def accept_offer(rollup: Rollup, data: RollupData) -> bool:
     # send notice with trip id and status
     trip_id = trips_manager.riders_trip.get(data.metadata.msg_sender)
     trip = trips_manager.trips.get(trip_id)
-    rollup.notice(str2hex(f"{{\"action\":\"accept_offer\",\"address\",\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
+    rollup.notice(str2hex(f"{{\"action\":\"accept_offer\",\"address\":\"{data.metadata.msg_sender}\",\"trip\":\"{trip.id}\",\"status\":\"{trip.status}\"}}"))
 
     return True
 

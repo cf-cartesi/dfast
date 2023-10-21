@@ -284,7 +284,16 @@ class _UserHomePageState extends State<UserHomePage>{
   Widget _manageTripButton() {
     final expandableFab = ExpandableFab(
       distance: 100,
-      primaryButtonIcon: const Icon(Icons.edit_road_rounded),
+      primaryButtonIcon: driversOffers.isEmpty?TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        tween: Tween<double>(
+            begin: 0,
+            end: 5.0
+        ),
+        builder: (context, value, _) =>
+        const CircularProgressIndicator(),
+      ):const Icon(Icons.edit_road_rounded),
       children: [
         ActionButton(
           onPressed: _cancelTrip,
@@ -303,18 +312,6 @@ class _UserHomePageState extends State<UserHomePage>{
     );
 
     return expandableFab;
-
-    // if (drivers.isEmpty) return expandableFab;
-    //
-    // return badges.Badge(
-    //   badgeContent: Text(drivers.length.toString()),
-    //   badgeStyle: const badges.BadgeStyle(
-    //       badgeColor: Colors.red
-    //   ),
-    //   badgeAnimation: const badges.BadgeAnimation.slide(),
-    //
-    //   child: expandableFab,
-    // );
   }
 
   Future<void> _cancelTrip() async {
@@ -339,73 +336,93 @@ class _UserHomePageState extends State<UserHomePage>{
           scrollDirection: Axis.vertical,
           itemCount: driversOffers.length,
           itemBuilder: (BuildContext context, int index) {
-            return Card(
-              margin: const EdgeInsets.symmetric(
-                  horizontal: 1.0,
-                  vertical: 1.0
-              ),
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(
-                      Radius.circular(8.0)
-                  )
-              ),
-              child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: GestureDetector(
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.drive_eta_sharp,
-                                size: 32,
-                                color: Colors.blue,
-                              ),
-                              const Spacer(),
-                              Text(
-                                '${driversOffers[index].driverAddress.substring(0, 6)}'
-                                    '...'
-                                    '${driversOffers[index].driverAddress.substring(
-                                    driversOffers[index].driverAddress.length-4)
-                                }',
-                                style: const TextStyle(
-                                    fontSize: 14,
-                                    letterSpacing: 0.0
+            return Row(
+              children: [
+                Card(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 1.0,
+                        vertical: 1.0
+                    ),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(
+                            Radius.circular(8.0)
+                        )
+                    ),
+                    child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  '${driversOffers[index].driverAddress.substring(0, 6)}'
+                                      '...'
+                                      '${driversOffers[index].driverAddress.substring(
+                                      driversOffers[index].driverAddress.length-4)
+                                  }',
                                 ),
-                              ),
-                              const Spacer(),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star, color: Colors.blue,),
-                                  Text(driversOffers[index].driverReputation.toString())
-                                ],
-                              ),
-                            ],
-                          ),
+                                Container(margin: EdgeInsets.only(right: 10.0),),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.star, color: Colors.blue,),
+                                    Text(driversOffers[index].driverReputation.toString())
+                                  ],
+                                ),
+                              ],
+                            ),
 
-                          Row(
-                            children: [
-                              Text(
-                                'Distance: ${
-                                  driversOffers[index].distance
-                                } m'
-                              ),
-                              const Spacer(),
-                              Text(
-                                  'Trips: ${driversOffers[index].driverNTrips}'
-                              ),
-                            ]
-                          ),
-                          Text(
-                              'ETA: ${
-                                  DateTime.fromMillisecondsSinceEpoch(
-                                      driversOffers[index].eta
-                              )}'
-                          ),
-                        ],
-                      )
-                  )
-              ),
+                            Row(
+                                children: [
+                                  Text(
+                                      'Distance: ${
+                                          driversOffers[index].distance
+                                      } m'
+                                  ),
+                                  Container(margin: EdgeInsets.only(right: 10.0),),
+                                  Text(
+                                      'Trips: ${driversOffers[index].driverNTrips}'
+                                  ),
+                                ]
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                    'ETA: ${
+                                        DateTime.fromMillisecondsSinceEpoch(
+                                            driversOffers[index].eta
+                                        )}'
+                                ),
+                              ],
+                            )
+                          ],
+                        )
+                    ),
+                  ),
+                Container(margin: const EdgeInsets.only(right: 10.0)),
+                Material(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: Ink(
+                      decoration: const ShapeDecoration(
+                        color: Colors.green,
+                        shape: CircleBorder(),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.check),
+                        color: Colors.white,
+                        onPressed: () {
+                          // close dialog
+                          Navigator.of(context,rootNavigator: true)
+                              .pop('dialog');
+
+                          _chooseDriver(driversOffers[index]);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             );
           }
       )
@@ -413,6 +430,31 @@ class _UserHomePageState extends State<UserHomePage>{
     );
   }
 
+  void _chooseDriver(TripOfferInfo offer) {
+    Map<String, dynamic> payload = {
+      "action":"accept_offer",
+      "driver":offer.driverAddress
+    };
+
+    addInput(user.account.credentials.privateKey,
+        jsonEncode(payload),
+        _checkTripAccepted
+    );
+  }
+
+  void _checkTripAccepted(InputAdded event) async {
+    monitoringDriversOffers = false;
+
+    getTripStatus(event.inputIndex.toInt()).then((value) {
+      FeedbackWidget(context).showSnackBarMessage('Bon Voyage!', Colors.blue);
+
+      setState(() {
+        tripStatus = TripStatus.riding;
+      });
+    }).catchError((error) {
+      monitoringDriversOffers = true;
+    });
+  }
 
   // riding Actions
   Widget _ridingButton() {

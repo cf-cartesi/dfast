@@ -12,7 +12,7 @@ class ExpandableFab extends StatefulWidget {
   });
 
   final bool? initialOpen;
-  final Icon primaryButtonIcon;
+  final Widget primaryButtonIcon;
   final double distance;
   final List<Widget> children;
 
