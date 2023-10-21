@@ -8,13 +8,13 @@ import 'package:web3_dart/rollups/application/inspect.dart';
 import 'package:web3_dart/shared/app_conf.dart';
 import 'package:web3_dart/user/application/user.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:badges/badges.dart' as badges;
 
 import '../../InputBox.g.dart';
 import '../../map/application/map_controller.dart';
 import '../../map/application/trip.dart';
 import '../../rollups/application/notices.dart';
 import '../../shared/expandableFAB.dart';
+import '../../shared/feedback.dart';
 import '../presentation/drawer.dart';
 
 
@@ -69,9 +69,11 @@ class _UserHomePageState extends State<UserHomePage>{
   Widget _selectButtonFromState() {
     if (tripStatus == TripStatus.creating) {
       return _createTripButton();
+    } else if (tripStatus == TripStatus.waitingForDriver) {
+      return _manageTripButton();
     }
 
-    return _manageTripButton();
+    return _ridingButton();
   }
 
   FloatingActionButton _createTripButton() {
@@ -155,14 +157,20 @@ class _UserHomePageState extends State<UserHomePage>{
   }
 
   Future<void> _addDestinationToMap() async {
+    FeedbackWidget(context).startLoading();
     final position = await user.determinePosition();
     currLocation = LatLng(position.latitude, position.longitude);
     destLocation = LatLng(destinationLat, destinationLng);
 
     trip = await Trip.generate(currLocation, destLocation);
 
+    FeedbackWidget(context).stopLoading();
     mapController.addTripToMap(currLocation, destLocation, trip.route);
-    await Future.delayed(const Duration(seconds: 1)); // wait map animation
+    await Future.delayed(
+        const Duration(
+            milliseconds: AnimatedMapController.animationDurationMs
+        )
+    ); // wait map animation
   }
 
   void _showBottom(double estimatedTripCost) {
@@ -203,9 +211,9 @@ class _UserHomePageState extends State<UserHomePage>{
                   ),
                   FilledButton(
                     onPressed: () {
-                      _confirmTrip().then((value) {
-                        Navigator.pop(context);
-                      });
+                      Navigator.pop(context);
+                      FeedbackWidget(context).startLoading();
+                      _confirmTrip();
                     },
                     style: FilledButton.styleFrom(
                         backgroundColor: Colors.green
@@ -230,7 +238,7 @@ class _UserHomePageState extends State<UserHomePage>{
       "distance": trip.distance,
       "timeout": trip.timeout
     };
-    
+
     addInput(user.account.credentials.privateKey,
         jsonEncode(payload),
         _checkTrip
@@ -246,6 +254,7 @@ class _UserHomePageState extends State<UserHomePage>{
     });
 
     print(await getTripInfo(tripId));
+    FeedbackWidget(context).stopLoading();
   }
 
   // manage trip actions
@@ -301,6 +310,26 @@ class _UserHomePageState extends State<UserHomePage>{
       title: const Text('Choose a Driver'),
       scrollable: true,
       content: null,
+    );
+  }
+
+
+  // riding Actions
+  Widget _ridingButton() {
+    return FloatingActionButton.extended(
+      onPressed: () { showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return _buildInsertDestinationLatLonAlertDialog();
+          });
+      },
+      label: const Row(
+        children: [
+          Icon(Icons.check),
+          Text('Finish Trip'),
+        ],
+      ),
+      backgroundColor: Colors.green,
     );
   }
 }
