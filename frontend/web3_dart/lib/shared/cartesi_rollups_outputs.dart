@@ -1,3 +1,10 @@
+
+String hexToAscii(String hexString) => List.generate(
+  hexString.length ~/ 2,
+      (i) => String.fromCharCode(
+      int.parse(hexString.substring(i * 2, (i * 2) + 2), radix: 16)),
+).join();
+
 class Inspect {
   final String status;
   final dynamic exceptionPayload;

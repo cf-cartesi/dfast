@@ -7,7 +7,7 @@ import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';
 
 
-void addInput(EthPrivateKey credentials, String payload) async {
+void addInput(EthPrivateKey credentials, String payload, Function (InputAdded event) callback) async {
   final client = Web3Client(AppConf.info.rpcUrl, Client());
 
   final InputBox inputContract = InputBox(
@@ -17,12 +17,7 @@ void addInput(EthPrivateKey credentials, String payload) async {
   // listen for the inputAdded event
   final subscription = inputContract.inputAddedEvents()
       .take(1)
-      .listen((event) {
-    print(
-        '${event.sender} sent input ${event.inputIndex} to DApp ${event.dapp}!'
-    );
-  }
-  );
+      .listen(callback);
 
   // prepare and send payload
   String payloadHex = utf8.encode(payload).map(

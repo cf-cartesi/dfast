@@ -1,17 +1,24 @@
 import 'dart:convert';
 
-import 'package:dart_geohash/dart_geohash.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:web3_dart/map/presentation/map.dart';
 import 'package:web3_dart/rollups/application/contracts.dart';
+import 'package:web3_dart/rollups/application/inspect.dart';
 import 'package:web3_dart/shared/app_conf.dart';
 import 'package:web3_dart/user/application/user.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:badges/badges.dart' as badges;
 
+import '../../InputBox.g.dart';
 import '../../map/application/map_controller.dart';
 import '../../map/application/trip.dart';
+import '../../rollups/application/notices.dart';
+import '../../shared/expandableFAB.dart';
 import '../presentation/drawer.dart';
+
+
+enum TripStatus { creating, waitingForDriver, riding }
 
 class UserHomePage extends StatefulWidget {
   static const String route = '/user';
@@ -23,6 +30,7 @@ class UserHomePage extends StatefulWidget {
 
 class _UserHomePageState extends State<UserHomePage>{
   late User user;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // destination form fields
   late double destinationLat;
@@ -36,12 +44,13 @@ class _UserHomePageState extends State<UserHomePage>{
 
   // trip
   late Trip trip;
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late TripStatus tripStatus;
+  List<dynamic> drivers = List.empty();
 
   @override
   void initState() {
     super.initState();
+    tripStatus = TripStatus.creating;
   }
 
 
@@ -50,20 +59,32 @@ class _UserHomePageState extends State<UserHomePage>{
     user = ModalRoute.of(context)!.settings.arguments as User;
 
     return Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(title: const Text('DFaST'), centerTitle: true,),
           endDrawer: UserDrawer(user: user, currentRoute: UserHomePage.route),
           body: AnimatedMap(controller: mapController),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () { showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return _buildInsertDestinationLatLonAlertDialog();
-                });
-              },
-            tooltip: 'Choose a destination',
-            child: const Icon(Icons.add_location, color: Colors.blue),
-          )
+          floatingActionButton: _selectButtonFromState()
       );
+  }
+
+  Widget _selectButtonFromState() {
+    if (tripStatus == TripStatus.creating) {
+      return _createTripButton();
+    }
+
+    return _manageTripButton();
+  }
+
+  FloatingActionButton _createTripButton() {
+    return FloatingActionButton(
+      onPressed: () { showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return _buildInsertDestinationLatLonAlertDialog();
+          });
+      },
+      tooltip: 'Choose a destination',
+      child: const Icon(Icons.add_location, color: Colors.blue),
+    );
   }
 
   AlertDialog _buildInsertDestinationLatLonAlertDialog() {
@@ -210,6 +231,76 @@ class _UserHomePageState extends State<UserHomePage>{
       "timeout": trip.timeout
     };
     
-    addInput(user.account.credentials.privateKey, jsonEncode(payload));
+    addInput(user.account.credentials.privateKey,
+        jsonEncode(payload),
+        _checkTrip
+    );
+  }
+
+  void _checkTrip(InputAdded event) async {
+    final tripId = await getTripId(event.inputIndex.toInt());
+
+    setState(() {
+      trip.id = tripId;
+      tripStatus = TripStatus.waitingForDriver;
+    });
+
+    print(await getTripInfo(tripId));
+  }
+
+  // manage trip actions
+  Widget _manageTripButton() {
+    final expandableFab = ExpandableFab(
+      distance: 100,
+      primaryButtonIcon: const Icon(Icons.edit_road_rounded),
+      children: [
+        ActionButton(
+          onPressed: _cancelTrip,
+          icon: const Icon(Icons.cancel, color: Colors.red),
+        ),
+        ActionButton(
+          onPressed: () { showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return _selectDriverAlertDialog();
+              });
+          },
+          icon: const Icon(Icons.drive_eta, color: Colors.blue),
+        ),
+      ],
+    );
+
+    return expandableFab;
+
+    // if (drivers.isEmpty) return expandableFab;
+    //
+    // return badges.Badge(
+    //   badgeContent: Text(drivers.length.toString()),
+    //   badgeStyle: const badges.BadgeStyle(
+    //       badgeColor: Colors.red
+    //   ),
+    //   badgeAnimation: const badges.BadgeAnimation.slide(),
+    //
+    //   child: expandableFab,
+    // );
+  }
+
+  Future<void> _cancelTrip() async {
+    Map<String, dynamic> payload = {"action": "cancel_request"};
+    addInput(user.account.credentials.privateKey,
+        jsonEncode(payload),
+        (InputAdded event) {}
+    );
+    setState(() {
+      tripStatus = TripStatus.creating;
+    });
+  }
+
+  AlertDialog _selectDriverAlertDialog() {
+    return AlertDialog(
+      title: const Text('Choose a Driver'),
+      scrollable: true,
+      content: null,
+    );
   }
 }

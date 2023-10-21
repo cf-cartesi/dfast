@@ -18,6 +18,7 @@ class Trip {
   late final List<LatLng> route;
   late final double distance;
   late final int timeout;
+  String id = "";
 
   late final int _tripCommitmentNonce;
   String _tripCommitment = "";
