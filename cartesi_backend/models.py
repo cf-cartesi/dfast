@@ -6,6 +6,7 @@ from pytrie import StringTrie
 import uuid
 from settings import Settings
 from pygeodesy import geohash
+from pymerkle import InmemoryTree
 
 settings = Settings()
 
@@ -13,10 +14,12 @@ class Wallet(BaseModel):
     # note: it considers a single asset (and can't change asset)
     owner: str
     balance: int = 0
+    # TODO: store pub keys
 
 class Rider(BaseModel):
     address: str
     n_trips: int = 0
+    # TODO: store pub keys
 
     def update_n_trips(self):
         self.n_trips += 1
@@ -25,6 +28,7 @@ class Driver(BaseModel):
     address: str
     n_trips: int = 0
     reputation: int = 6000 # max 10k
+    invalidated: bool = False
     # total_inInsurance_payed: int = 0
 
     def update_reputation(self, score: int) -> int:
@@ -164,17 +168,34 @@ class DriversManager:
     def get(self, address: str) -> Driver:
         addr = address.lower()
         driver = self.drivers.get(addr)
+        if driver is not None and driver.invalidated:
+            raise Exception("Driver invalidated")
         return driver
+
+    def invalidate(self, address: str):
+        driver = self.get(address)
 
     def create(self, address: str) -> Driver:
         addr = address.lower()
-        if self.drivers.get(addr) is not None:
+        if self.get(addr) is not None:
             raise Exception("Already a driver")
         deposit = self.security_deposits_registers.get(addr)
         if deposit is None or deposit < settings.security_deposit_value:
             raise Exception("Invalid deposit")
         new_driver = Driver(
             address = addr
+        )
+        self.drivers[new_driver.address] = new_driver
+        return new_driver
+
+    def import_driver(self, address: str, reputation: int, n_trips: int) -> Driver:
+        addr = address.lower()
+        if self.get(addr) is not None:
+            raise Exception("Already a driver")
+        new_driver = Driver(
+            address = addr,
+            n_trips = n_trips,
+            reputation = report
         )
         self.drivers[new_driver.address] = new_driver
         return new_driver
@@ -195,7 +216,7 @@ class DriversManager:
 
     def update_reputation(self, address: str, score: int) -> int:
         addr = address.lower()
-        driver = self.drivers.get(addr)
+        driver = self.get(addr)
         if driver is None:
             raise Exception("Invalid driver")
         if score < 0 or score > settings.max_reputation:
