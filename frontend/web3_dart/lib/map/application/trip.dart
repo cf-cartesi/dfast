@@ -10,6 +10,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:web3_dart/shared/osmr.dart';
 import 'package:web3dart/crypto.dart';
 
+import '../../shared/cartesi_rollups_outputs.dart';
+
 const DEFAULT_TIMEOUT = 300;
 
 class Trip {
@@ -38,26 +40,15 @@ class Trip {
   static Future<Trip> generate(
       LatLng origin, LatLng destination, [int? timeout]) async {
 
-    // final osmrResponse = OsmrOutput.fromJson(jsonDecode(
-    //     await rootBundle.loadString("assets/osmrRouteExample.json")
-    // ));
-    //
-    // final distance = osmrResponse.routes.first.distance;
-    // timeout = timeout ?? DEFAULT_TIMEOUT;
-    //
-    // List<LatLng> route = [];
-    // osmrResponse.routes.first.legs.first.steps.map((step) =>
-    //     route.add(
-    //         LatLng(step.maneuver.location[1], step.maneuver.location[0])
-    //     )
-    // );
-
-    // String payload = 'route/${origin.longitude},${origin.latitude};'
-    //     '${destination.longitude},${destination.latitude}';
-    // http.get(Uri.parse('${AppConf.info.inspectAPIURL}/$payload'));
-    final osmrResponse = jsonDecode(
-        await rootBundle.loadString("assets/osmrRouteExample.json")
+    String payload = 'route/${origin.longitude},${origin.latitude};'
+         '${destination.longitude},${destination.latitude}';
+    final httpResponse = await http.get(Uri.parse('${AppConf.info.inspectAPIURL}/$payload'));
+    final reports = (jsonDecode(httpResponse.body)["reports"]) as List<dynamic>;
+    final reportPayload = hexToAscii(
+        (reports.first["payload"] as String).substring(2)
     );
+
+    final osmrResponse = jsonDecode(reportPayload);
 
     final distance = osmrResponse['routes'].first['distance'];
     timeout = timeout ?? DEFAULT_TIMEOUT;
