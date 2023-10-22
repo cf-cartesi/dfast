@@ -4,7 +4,7 @@ import requests
 import re
 
 from cartesi import DApp, Rollup, RollupData, JSONRouter, URLRouter
-from cartesi.models import _hex2str
+from cartesi.models import _hex2str, _str2hex
 
 # logging.basicConfig(level="DEBUG")
 logging.basicConfig(level="INFO")
@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 
 rollup_server = environ["ROLLUP_HTTP_SERVER_URL"]
 logger.info(f"HTTP rollup_server url is {rollup_server}")
+
+import json
+
+#
+# OSRM related 
+#
+ENABLE_STEPS = "true"
+OSRM_GET_ROUTE_URL = r"http://127.0.0.1:5000/route/v1/driving/{origin};{destination}?steps=" + f"{ENABLE_STEPS}"
 
 dapp = DApp()
 json_router = JSONRouter()
@@ -117,20 +125,27 @@ def get_trip_info(rollup: Rollup, data: RollupData) -> bool:
     return True
 
 # get route from points
-ROUTE_REQUEST = r'route/(?P<lon1>[0-9.]+),(?P<lat1>[0-9.]+);(?P<lon2>[0-9.]+),(?P<lat2>[0-9.]+)'
+ROUTE_REQUEST = r'route/(?P<lon1>[-]?[0-9.]+),(?P<lat1>[-]?[0-9.]+);(?P<lon2>[-]?[0-9.]+),(?P<lat2>[-]?[0-9.]+)'
 @url_router.inspect(ROUTE_REQUEST)
 def get_route(rollup: Rollup, data: RollupData) -> bool:
     logger.info(f"Running route request")
 
     # process input data
-    result = get_path_params(data, ROUTE_REQUEST)
-    logger.info(f"{result=}")
+    url_params = get_path_params(data, ROUTE_REQUEST)
+    logger.info(f"Params: {url_params}")
 
-    # TODO: get osrm route
-    # route_result = requests.get(f"http://127.0.0.1:8080:...{result['lon1']},{result['lat1']};{result['lon2']},{result['lat2']}")
+    # formatting route request to OSRM and making request
+    orig_coord = f"{url_params['lon1']},{url_params['lat1']}"
+    dest_coord = f"{url_params['lon2']},{url_params['lat2']}"
+    route_response = requests.get(OSRM_GET_ROUTE_URL.format(origin=orig_coord, destination=dest_coord))
 
-    # send report
-    rollup.report('0x') # + hex encoded response 
+    route_json_dump = json.dumps(route_response.json())
+    route_hex_dump = _str2hex(route_json_dump)
+    #logger.info(f"Response in json string dump:\n{route_json_dump}")
+    #logger.info(f"Hex dump of response:\n{route_hex_dump}")
+    #logger.info(f"Payload lengh: {len(route_hex_dump)}")
+    # send report with route
+    rollup.report('0x' + json.dumps(route_response.json()).encode("utf-8").hex())
 
     return True
 
