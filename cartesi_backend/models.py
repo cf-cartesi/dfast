@@ -1,12 +1,10 @@
 from pydantic import BaseModel
-from typing import NamedTuple
-from typing import Optional
+from typing import NamedTuple, Optional
 from enum import Enum
 from pytrie import StringTrie 
 import uuid
 from settings import Settings
 from pygeodesy import geohash
-from pymerkle import InmemoryTree
 
 settings = Settings()
 

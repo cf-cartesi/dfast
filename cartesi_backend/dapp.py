@@ -11,6 +11,7 @@ from cartesi.models import _hex2str
 
 from models import *
 from settings import Settings
+from reputation_exporter import *
 
 # logging.basicConfig(level="DEBUG")
 logging.basicConfig(level="INFO")
@@ -32,6 +33,7 @@ drivers_manager = DriversManager()
 trips_manager = TripsManager()
 bank = Bank()
 settings = Settings()
+reputation_exporter = ReputationExporter()
 
 #
 # Utils
@@ -486,7 +488,6 @@ def finish_trip(rollup: Rollup, data: RollupData) -> bool:
 
     except Exception as e:
         msg = f"Could not finish trip. Error: {e}"
-        logger.error(f"{msg}\n{traceback.format_exc()}")
         logger.error(msg)
         rollup.report(str2hex(msg))
         return False
@@ -575,6 +576,64 @@ def timeout_trip(rollup: Rollup, data: RollupData) -> bool:
         return False
 
     rollup.notice(str2hex(f"{{\"action\":\"timeout_trip\",\"address\":\"{data.metadata.msg_sender}\"}}"))
+
+    return True
+
+# export reputation
+@json_router.advance({'action': 'export_reputation'})
+def export_reputation(rollup: Rollup, data: RollupData) -> bool:
+    logger.info("Running export reputation trip")
+    # finish trip in quarantine by timeout
+
+    payload = ExportReputationInput.parse_obj(data.json_payload())
+
+    driver = drivers_manager.get(data.metadata.msg_sender)
+    if driver is None:
+        msg = f"Could not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    try:
+        commitment = reputation_exporter.export_info(driver,payload)
+        drivers_manager.invalidate(driver.address)
+    except Exception as e:
+        msg = f"Could not export reputation. Error: {e}"
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        logger.error(f"{msg}\n{traceback.format_exc()}")
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"export_reputation\",\"address\":\"{data.metadata.msg_sender}\",\"commitment\":\"{commitment}\"}}"))
+
+    return True
+
+# export reputation
+@json_router.advance({'action': 'import_reputation'})
+def import_reputation(rollup: Rollup, data: RollupData) -> bool:
+    logger.info("Running export reputation trip")
+    # finish trip in quarantine by timeout
+
+    payload = ExportReputationInput.parse_obj(data.json_payload())
+
+    driver = drivers_manager.get(data.metadata.msg_sender)
+    if driver is not None:
+        msg = f"Driver already in systemCould not get driver."
+        logger.warning(msg)
+        rollup.report(str2hex(msg))
+        return False
+
+    try:
+        reputation, n_trips = reputation_exporter.import_info(payload)
+        drivers_manager.import_driver(data.metadata.msg_sender, reputation, n_trips)
+    except Exception as e:
+        msg = f"Could not import reputation. Error: {e}"
+        logger.error(msg)
+        rollup.report(str2hex(msg))
+        logger.error(f"{msg}\n{traceback.format_exc()}")
+        return False
+
+    rollup.notice(str2hex(f"{{\"action\":\"import_reputation\",\"address\":\"{data.metadata.msg_sender}\"}}"))
 
     return True
 
@@ -800,6 +859,18 @@ def get_route(rollup: Rollup, data: RollupData) -> bool:
 
     # send report
     rollup.report('0x') # + hex encoded response 
+
+    return True
+
+# get reputaion commitment merkle info
+@url_router.inspect('reputation_merkle_info/{commitment}')
+def get_reputaion_merkle_info(rollup: Rollup, params: URLParameters) -> bool:
+    logger.info(f"Running dispute commitment merkle info {params.path_params=}")
+
+    reputaion_merkle_info = reputation_exporter.get_merkle_info(params.path_params['commitment'])
+
+    # send report
+    if reputaion_merkle_info is not None: rollup.report(to_jsonhex(reputaion_merkle_info))
 
     return True
 
