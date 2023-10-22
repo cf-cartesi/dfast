@@ -28,12 +28,7 @@ class ReputationExporter:
         self.max_heigh = 10 # 
         self.max_capacity = 2 ** (self.max_heigh-1)
         self.current_tree_index = 0
-        tree = self.get_tree(0)
-        for commitment in [b'a',b'b',b'c',b'd']:
-            ind = tree.append_entry(commitment)
-            self.commitment_index[commitment] = ind
-            self.commitment_tree[commitment] = 0
-    
+
     def get_tree(self, index):
         tree = self.trees.get(index)
         if tree is None:
@@ -84,6 +79,8 @@ class ReputationExporter:
 
         verifier_file = "Verifier.toml"
         p = subprocess.Popen(f"cd reputation_verifier && nargo verify -v {verifier_file}",shell=subprocess.PIPE,stderr=subprocess.PIPE)
+        out, err = p.communicate()
+
         if p.returncode != 0:
             raise Exception("invalid proof")
 
@@ -132,12 +129,12 @@ class ReputationExporter:
         if driver.n_trips != int(n_trips_hex,16):
             raise Exception("Number of trips witness does not match driver number of trips")
 
-        proof_file = "proofs/reputation_verifier.proof"
-        with open(f"reputation_verifier/{proof_file}", 'w') as f:
+        proof_file = "proofs/reputation_commitment_verifier.proof"
+        with open(f"reputation_commitment_verifier/{proof_file}", 'w') as f:
             f.write(input_params.proof)
 
         verifier_file = "Verifier.toml"
-        with open(f"reputation_verifier/{verifier_file}", 'w') as f:
+        with open(f"reputation_commitment_verifier/{verifier_file}", 'w') as f:
             f.write(f"nullifier_hash = {input_params.nullifier_hash}\n")
             f.write(f"root = {input_params.root}\n")
             f.write(f"n_trips = {input_params.n_trips}\n")
@@ -146,6 +143,7 @@ class ReputationExporter:
         # verify commitment is in tree proof
         verifier_file = "Verifier.toml"
         p = subprocess.Popen(f"cd reputation_commitment_verifier && nargo verify -v {verifier_file}",shell=subprocess.PIPE,stderr=subprocess.PIPE)
+        out, err = p.communicate()
         if p.returncode != 0:
             raise Exception("invalid proof")
 
@@ -160,8 +158,6 @@ class ReputationExporter:
         commitment = bytes.fromhex(commitment_hex[2:])
 
         tree_index = self.commitment_tree.get(commitment)
-        print(self.commitment_tree)
-        print(self.commitment_index)
         if tree_index is None:
             raise Exception("invalid tree")
         tree = self.trees.get(tree_index)
