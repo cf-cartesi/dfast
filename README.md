@@ -17,6 +17,8 @@ Ride share applications are part of our lives and a major improvement over the t
 
 ### User Location Privacy
 
+Ride request with ephemeral ID and use of geohashes for origin and destination areas to improve privacy for riders. Requests have an associated signature of the full route, that is sent to the driver upon acceptance of rider and driver. The driver can verify in the the DApp that the disclosed route is the one commited to when the rider made the ride request. The route is calculated within the Cartesi Machine using OSRM - to achieve decentralization, determinism and verifiability.
+
 ### Reputation Exporter
 
 While the system avoids revealling information about the users' locations, the system keeps the data about current users balance. While the rider is not required to keep the same address, the drivers have to do a security deposit beforehand and the reputation is maitained inside the system. Therefore, the reputation exporter allows drivers to change their address and keep their previous reputation score and number of accumulated trips.
