@@ -617,14 +617,14 @@ def export_reputation(rollup: Rollup, data: RollupData) -> bool:
 # export reputation
 @json_router.advance({'action': 'import_reputation'})
 def import_reputation(rollup: Rollup, data: RollupData) -> bool:
-    logger.info("Running export reputation trip")
+    logger.info("Running import reputation trip")
     # finish trip in quarantine by timeout
 
-    payload = ExportReputationInput.parse_obj(data.json_payload())
+    payload = ImportReputationInput.parse_obj(data.json_payload())
 
     driver = drivers_manager.get(data.metadata.msg_sender)
     if driver is not None:
-        msg = f"Driver already in systemCould not get driver."
+        msg = f"Driver already in system."
         logger.warning(msg)
         rollup.report(str2hex(msg))
         return False
