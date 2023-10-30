@@ -49,7 +49,7 @@ fn compute_merkle_sha_root(hash_path: [u8;320], path_heigh: Field, rule: [u1;10]
                 h_ind = h_ind + 1;
             }
             if i >= 1 {
-                let path_bit = rule[i] as bool;
+                let path_bit = rule[i-1] as bool;
                 let (hash_left, hash_right) = if path_bit {
                     (next_path, current)
                 } else {

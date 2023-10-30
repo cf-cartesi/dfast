@@ -11,7 +11,7 @@ settings = Settings()
 class Wallet(BaseModel):
     # note: it considers a single asset (and can't change asset)
     owner: str
-    balance: int = 0
+    balance: int = 0 # 1_000_000_000_000_000_000_000
     # TODO: store pub keys
 
 class Rider(BaseModel):
@@ -25,7 +25,7 @@ class Rider(BaseModel):
 class Driver(BaseModel):
     address: str
     n_trips: int = 0
-    reputation: int = 6000 # max 10k
+    reputation: int = 7000 # max 10k
     invalidated: bool = False
     # total_inInsurance_payed: int = 0
 
@@ -172,6 +172,11 @@ class DriversManager:
 
     def invalidate(self, address: str):
         driver = self.get(address)
+        if driver is None:
+            raise Exception("Invalid driver")
+        if driver is not None and driver.invalidated:
+            raise Exception("Driver invalidated")
+        driver.invalidated = True
 
     def create(self, address: str) -> Driver:
         addr = address.lower()
@@ -193,7 +198,7 @@ class DriversManager:
         new_driver = Driver(
             address = addr,
             n_trips = n_trips,
-            reputation = report
+            reputation = reputation
         )
         self.drivers[new_driver.address] = new_driver
         return new_driver

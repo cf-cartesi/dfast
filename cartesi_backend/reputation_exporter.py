@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from pymerkle import InmemoryTree
 import subprocess
 from typing import List
+from models import Driver
 
 class ExportReputationInput(BaseModel):
     action: str = "export_reputation"
@@ -22,13 +23,19 @@ class ImportReputationInput(BaseModel):
 class ReputationExporter:
     def __init__(self):
         self.trees: dict[int,InmemoryTree] = {}
-        self.nullifiers: list[str] = {}
+        self.nullifiers: list[str] = []
         self.commitment_index: dict[str,int] = {}
         self.commitment_tree: dict[str,int] = {}
         self.max_heigh = 10 # 
         self.max_capacity = 2 ** (self.max_heigh-1)
         self.current_tree_index = 0
-
+        
+        # tree = self.get_tree(0)
+        # for commitment in [b'a',b'b',b'c',b'd']:
+        #     ind = tree.append_entry(commitment)
+        #     self.commitment_index[commitment] = ind
+        #     self.commitment_tree[commitment] = 0
+    
     def get_tree(self, index):
         tree = self.trees.get(index)
         if tree is None:
@@ -42,7 +49,7 @@ class ReputationExporter:
             self.current_tree_index += 1
         return self.current_tree_index
 
-    def export_info(self, driver, input_params: ExportReputationInput):
+    def export_info(self, driver: Driver, input_params: ExportReputationInput):
         # TODO
         # Compare public info with driver info
         #   reputation, n trips
@@ -79,8 +86,6 @@ class ReputationExporter:
 
         verifier_file = "Verifier.toml"
         p = subprocess.Popen(f"cd reputation_verifier && nargo verify -v {verifier_file}",shell=subprocess.PIPE,stderr=subprocess.PIPE)
-        out, err = p.communicate()
-
         if p.returncode != 0:
             raise Exception("invalid proof")
 
@@ -119,22 +124,33 @@ class ReputationExporter:
         if nullifier in self.nullifiers:
             raise Exception("invalid nullifier")
 
+        tree_index = input_params.tree_index
+        if tree_index is None:
+            raise Exception("invalid tree")
+        tree = self.trees.get(tree_index)
+        if tree is None:
+            raise Exception("invalid tree")
+
+        root_hex = "0x"
+        for n in input_params.root: root_hex += n[-2:]
+        root = bytes.fromhex(root_hex[2:])
+        if root != tree.root.digest:
+            raise Exception("invalid root")
+
         reputation_hex = "0x"
         for r in input_params.reputation: reputation_hex += r[-2:]
-        if driver.reputation != int(reputation_hex,16):
-            raise Exception("Reputation witness does not match driver reputation")
+        reputation = int(reputation_hex,16)
 
         n_trips_hex = "0x"
         for n in input_params.n_trips: n_trips_hex += n[-2:]
-        if driver.n_trips != int(n_trips_hex,16):
-            raise Exception("Number of trips witness does not match driver number of trips")
+        n_trips = int(n_trips_hex,16)
 
-        proof_file = "proofs/reputation_commitment_verifier.proof"
-        with open(f"reputation_commitment_verifier/{proof_file}", 'w') as f:
+        proof_file = "proofs/reputation_verifier.proof"
+        with open(f"reputation_verifier/{proof_file}", 'w') as f:
             f.write(input_params.proof)
 
         verifier_file = "Verifier.toml"
-        with open(f"reputation_commitment_verifier/{verifier_file}", 'w') as f:
+        with open(f"reputation_verifier/{verifier_file}", 'w') as f:
             f.write(f"nullifier_hash = {input_params.nullifier_hash}\n")
             f.write(f"root = {input_params.root}\n")
             f.write(f"n_trips = {input_params.n_trips}\n")
@@ -143,7 +159,6 @@ class ReputationExporter:
         # verify commitment is in tree proof
         verifier_file = "Verifier.toml"
         p = subprocess.Popen(f"cd reputation_commitment_verifier && nargo verify -v {verifier_file}",shell=subprocess.PIPE,stderr=subprocess.PIPE)
-        out, err = p.communicate()
         if p.returncode != 0:
             raise Exception("invalid proof")
 
