@@ -1,4 +1,5 @@
 # dfast
+
 A Decentralized Fair Shared Transportation system. Ride share without a middle-man!
 
 ## Overall Idea
@@ -27,20 +28,18 @@ To use the reputation exporter (compile, prove, and verify the programs) you sho
 
 #### Reputation Verifier
 
-The reputation verifier is responsible to check whether the commitment of a reputation and number of trips is indeed based on the driver's actual attributes. As the commitment includes secret information, we use zero-knowledge to generate proofs of correct computation without disclosing the secret information. 
+The reputation verifier is responsible to check whether the commitment of a reputation and number of trips is indeed based on the driver's actual attributes. As the commitment includes secret information, we use zero-knowledge to generate proofs of correct computation without disclosing the secret information.
 
-To display the information of the current circuits 
+To display the information of the current circuits
 
 ```shell
 cd cartesi_backend/reputation_verifier
 nargo info 
 ```
 
-+---------------------+------------------------+--------------+----------------------+
 | Package             | Language               | ACIR Opcodes | Backend Circuit Size |
-+---------------------+------------------------+--------------+----------------------+
+|:--------------------|:-----------------------|:-------------|:---------------------|
 | reputation_verifier | PLONKCSat { width: 3 } | 139          | 10765                |
-+---------------------+------------------------+--------------+----------------------+
 
 You can generate proofs with
 
@@ -60,20 +59,18 @@ While the proving occurs on a client interface, the proof verifications are exec
 
 #### Reputation Commitment Verifier
 
-The reputation commitment verifier is responsible to validate that for a given reputation and number of trips, a hash valua is associated with a previous submitted leaf. As the commitment includes secret information, we use zero-knowledge to generate proofs of correct computation without disclosing the secret information. 
+The reputation commitment verifier is responsible to validate that for a given reputation and number of trips, a hash valua is associated with a previous submitted leaf. As the commitment includes secret information, we use zero-knowledge to generate proofs of correct computation without disclosing the secret information.
 
-To display the information of the current circuits 
+To display the information of the current circuits
 
 ```shell
 cd cartesi_backend/reputation_commitment_verifier
 nargo info 
 ```
 
-+--------------------------------+------------------------+--------------+----------------------+
 | Package                        | Language               | ACIR Opcodes | Backend Circuit Size |
-+--------------------------------+------------------------+--------------+----------------------+
+|:-------------------------------|:-----------------------|:-------------|:---------------------|
 | reputation_commitment_verifier | PLONKCSat { width: 3 } | 6211         | 85138                |
-+--------------------------------+------------------------+--------------+----------------------+
 
 Similarly as the reputation verifier, you can generate proofs with
 
@@ -96,4 +93,3 @@ Once again, proofs are generated on the client, and verifications occur within t
 The current reputation system allows any reputation up to 10000. A driver exporting his reputation and number of trips could give sufficient knowledge to associate the new driver address with the old one. With that in mind the reputation could be quantized. Also, the reputation could be pulverized into reputation units to make it harder to distinguish one driver reputation from another.
 
 The current payment system allows anyone to check the current balance on any user. Similarly to the reputation system, the assets inside the system could be quantized to anonymize the users current balance, also allowing users to change wallets without express transfering the assets. To provide even more security and avoid certain misbehaviors, the payment system would include two different tokens, one for payments which would be converted to receipts at the end of the trip, and only receipts would allow asset withdrawals.
-
